@@ -1,9 +1,4 @@
-
-#include <iostream>
-#include <fstream>
-#include <GL\glew.h>
-
-#include "LoadTGA.h"
+#include <gpch.h>
 
 GLuint LoadTGA(const char *file_path)				// load TGA file to memory
 {
@@ -62,4 +57,9 @@ GLuint LoadTGA(const char *file_path)				// load TGA file to memory
 	delete []data;
 
 	return texture;						
+}
+
+GLuint Load::TGA(const char* a)
+{
+	return LoadTGA(a);
 }

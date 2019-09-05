@@ -1,9 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string.h>
-#include <GL/glew.h>
-#include "shader.hpp"
+#include <gpch.h>
 
 void Shader::CheckStatus(short s, unsigned int ui)
 {
@@ -17,8 +12,7 @@ void Shader::CheckStatus(short s, unsigned int ui)
 		if (!state)
 		{
 			glGetProgramInfoLog(ui, 1024, NULL, infoLog);
-			std::cout << "[PROGRAM] LINKING FAILED: " << infoLog << '\n';
-			//std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+			std::cout << "[PROGRAM] LINKING FAILED: \n" << infoLog << '\n';
 		}
 	}
 	case 1:
@@ -27,8 +21,7 @@ void Shader::CheckStatus(short s, unsigned int ui)
 		if (!state)
 		{
 			glGetShaderInfoLog(ui, 1024, NULL, infoLog);
-			std::cout << "[SHADER] [VERT] COMPILE FAILED: " << infoLog << '\n';
-			//std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+			std::cout << "[SHADER] [VERT] COMPILE FAILED: \n" << infoLog << '\n';
 		}
 	}
 	case 2:
@@ -37,8 +30,7 @@ void Shader::CheckStatus(short s, unsigned int ui)
 		if (!state)
 		{
 			glGetShaderInfoLog(ui, 1024, NULL, infoLog);
-			std::cout << "[SHADER] [FRAG] COMPILE FAILED: " << infoLog << '\n';
-			//std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+			std::cout << "[SHADER] [FRAG] COMPILE FAILED: \n" << infoLog << '\n';
 		}
 	}
 	}
@@ -49,16 +41,6 @@ Shader::Shader()
 }
 
 Shader::Shader(std::string v, std::string f)
-{
-	Init(v, f);
-}
-
-Shader::~Shader()
-{
-	
-}
-
-void Shader::Init(std::string v, std::string f)
 {
 	std::string vCode, fCode;
 	std::ifstream vFile, fFile;
@@ -93,7 +75,7 @@ void Shader::Init(std::string v, std::string f)
 	const char* vCodeCStr = vCode.c_str();
 	const char* fCodeCStr = fCode.c_str();
 	unsigned int vert, frag;
-
+	
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert, 1, &vCodeCStr, NULL);
 	glCompileShader(vert);
@@ -114,32 +96,37 @@ void Shader::Init(std::string v, std::string f)
 	glDeleteShader(frag);
 }
 
+Shader::~Shader()
+{
+	
+}
+
 void Shader::Use()
 {
 	glUseProgram(ID);
 }
 
-void Shader::SetBool(std::string uniformName, bool b)
+void Shader::SetUniform(std::string uniformName, bool b)
 {
 	glUniform1i(glGetUniformLocation(ID, uniformName.c_str()), b);
 }
 
-void Shader::SetInt(std::string uniformName, int i)
+void Shader::SetUniform(std::string uniformName, int i)
 {
 	glUniform1i(glGetUniformLocation(ID, uniformName.c_str()), i);
 }
 
-void Shader::SetFloat(std::string uniformName, float f)
+void Shader::SetUniform(std::string uniformName, float f)
 {
 	glUniform1f(glGetUniformLocation(ID, uniformName.c_str()), f);
 }
 
-void Shader::SetVec3(std::string uniformName, Vector3 v)
+void Shader::SetUniform(std::string uniformName, vec3 v)
 {
 	glUniform3fv(glGetUniformLocation(ID, uniformName.c_str()), 1, &v.x);
 }
 
-void Shader::SetMat4(std::string uniformName, Mtx44 m)
+void Shader::SetUniform(std::string uniformName, mat4 m)
 {
 	glUniformMatrix4fv(glGetUniformLocation(ID, uniformName.c_str()), 1, GL_FALSE, &m.a[0]);
 }

@@ -3,4 +3,9 @@
 
 GLuint LoadTGA(const char *file_path);
 
+namespace Load
+{
+	GLuint TGA(const char* file_path);
+}
+
 #endif

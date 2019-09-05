@@ -1,8 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <map>
-
-#include "LoadOBJ.h"
+#include <gpch.h>
 
 bool LoadOBJ(
 	const char *file_path, 
@@ -36,7 +32,7 @@ bool LoadOBJ(
 		else if(strncmp("vt ", buf, 3) == 0)
 		{
 			TexCoord tc;
-			sscanf_s((buf + 2), "%f%f", &tc.u, &tc.v);
+			sscanf_s((buf + 2), "%f%f", tc.u, tc.v);
 			temp_uvs.push_back(tc);
 		}
 		else if(strncmp("vn ", buf, 3) == 0)
@@ -177,7 +173,7 @@ void IndexVBO(
 			// If not, it needs to be added in the output data.
 			Vertex v;
 			v.pos.Set(in_vertices[i].x, in_vertices[i].y, in_vertices[i].z);
-			v.texCoord.Set(in_uvs[i].u, in_uvs[i].v);
+			v.texCoord.Set(*in_uvs[i].u, *in_uvs[i].v);
 			v.normal.Set(in_normals[i].x, in_normals[i].y, in_normals[i].z);
 			v.color.Set(1, 1, 1);
 			out_vertices.push_back(v);

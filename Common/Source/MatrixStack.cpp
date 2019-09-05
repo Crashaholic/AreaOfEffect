@@ -8,6 +8,7 @@ Matrix Stack to replace openGL math function
 */
 /******************************************************************************/
 #include "MatrixStack.h"
+#include <gpch.h>
 
 /******************************************************************************/
 /*!
@@ -191,9 +192,9 @@ Setup frustum matrix and push to matrix stack
 	Frustum - back
 */
 /******************************************************************************/
-void MS::Frustum(double left, double right, double bottom, double top, double near, double far) {
+void MS::Frustum(double left, double right, double bottom, double top, double nearval, double farval) {
 	Mtx44 mat;
-	mat.SetToFrustum(left, right, bottom, top, near, far);
+	mat.SetToFrustum(left, right, bottom, top, nearval, farval);
 	ms.top() = ms.top() * mat;
 }
 
