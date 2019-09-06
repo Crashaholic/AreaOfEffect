@@ -11,7 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Damage.cpp" />
+    <ClCompile Include="Source\Enemy.cpp" />
+    <ClCompile Include="Source\Entity.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
+    <ClCompile Include="Source\GOManager.cpp" />
     <ClCompile Include="Source\gpch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">gpch.h</PrecompiledHeaderFile>
@@ -23,12 +27,18 @@
     <ClCompile Include="Source\MeshBuilder.cpp" />
     <ClCompile Include="Source\Mtx44.cpp" />
     <ClCompile Include="Source\shader.cpp" />
+    <ClCompile Include="Source\Spell.cpp" />
+    <ClCompile Include="Source\StatusEffect.cpp" />
     <ClCompile Include="Source\timer.cpp" />
     <ClCompile Include="Source\Utility.cpp" />
     <ClCompile Include="Source\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Damage.h" />
+    <ClInclude Include="Source\Enemy.h" />
+    <ClInclude Include="Source\Entity.h" />
     <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\GOManager.h" />
     <ClInclude Include="Source\gpch.h" />
     <ClInclude Include="Source\LoadOBJ.h" />
     <ClInclude Include="Source\LoadTGA.h" />
@@ -38,7 +48,9 @@
     <ClInclude Include="Source\MeshBuilder.h" />
     <ClInclude Include="Source\Mtx44.h" />
     <ClInclude Include="Source\MyMath.h" />
+    <ClInclude Include="Source\Spell.h" />
     <ClInclude Include="Source\shader.hpp" />
+    <ClInclude Include="Source\StatusEffect.h" />
     <ClInclude Include="Source\timer.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\Vector3.h" />
