@@ -7,8 +7,6 @@ struct Component
 	Component(float r = 0.1f, float g = 0.1f, float b = 0.1f) {Set(r, g, b);}
 	void Set(float r, float g, float b) {this->r = r; this->g = g; this->b = b;}
 };
-
-
 struct Material
 {
 	Component kAmbient;

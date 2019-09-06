@@ -7,7 +7,8 @@
 Struct to define a 3D vector
 */
 /******************************************************************************/
-#include <gpch.h>
+#include <cmath>
+#include "Vector3.h"
 
 bool Vector3::IsEqual(float a, float b) const
 {

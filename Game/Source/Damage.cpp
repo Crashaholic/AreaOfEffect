@@ -1,4 +1,4 @@
-#include <gpch.h>
+#include "gpch.h"
 #include "Damage.h"
 
 // Overloaded constructor to define a Damage type quickly
@@ -107,10 +107,10 @@ Damage Damage::operator*(const float & f) const
 Damage Damage::operator*(const double & d) const
 {
 	return Damage(
-		(double)this->Phys	* d,
-		(double)this->Fire	* d,
-		(double)this->Cold	* d,
-		(double)this->Light	* d
+		(float)((double)this->Phys	* d),
+		(float)((double)this->Fire	* d),
+		(float)((double)this->Cold	* d),
+		(float)((double)this->Light	* d)
 	);
 }
 

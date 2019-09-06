@@ -1,11 +1,5 @@
-
+#include "gpch.h"
 #include "Application.h"
-
-//Include GLEW
-#include <GL/glew.h>
-
-//Include GLFW
-#include <GLFW/glfw3.h>
 
 //Include the standard C++ headers
 #include <stdio.h>
@@ -91,7 +85,7 @@ void Application::Init()
 	//Create a window and create its OpenGL context
 	m_width = 800;
 	m_height = 600;
-	m_window = glfwCreateWindow(m_width, m_height, "Game", NULL, NULL);
+	m_window = glfwCreateWindow(m_width, m_height, "Physics", NULL, NULL);
 
 	//If the window couldn't be created
 	if (!m_window)

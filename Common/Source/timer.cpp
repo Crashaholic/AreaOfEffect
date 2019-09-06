@@ -1,4 +1,4 @@
-#include <gpch.h>
+#include "timer.h"
 
 StopWatch::StopWatch()
 {    

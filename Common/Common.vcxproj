@@ -11,50 +11,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Damage.cpp" />
-    <ClCompile Include="Source\Enemy.cpp" />
-    <ClCompile Include="Source\Entity.cpp" />
-    <ClCompile Include="Source\GameObject.cpp" />
-    <ClCompile Include="Source\GOManager.cpp" />
-    <ClCompile Include="Source\gpch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">gpch.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <ClCompile Include="Source\LoadOBJ.cpp" />
-    <ClCompile Include="Source\LoadTGA.cpp" />
+    <ClCompile Include="Source\Logging.cpp" />
     <ClCompile Include="Source\MatrixStack.cpp" />
-    <ClCompile Include="Source\Mesh.cpp" />
-    <ClCompile Include="Source\MeshBuilder.cpp" />
     <ClCompile Include="Source\Mtx44.cpp" />
-    <ClCompile Include="Source\shader.cpp" />
-    <ClCompile Include="Source\Spell.cpp" />
-    <ClCompile Include="Source\StatusEffect.cpp" />
     <ClCompile Include="Source\timer.cpp" />
-    <ClCompile Include="Source\Utility.cpp" />
     <ClCompile Include="Source\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Damage.h" />
-    <ClInclude Include="Source\Enemy.h" />
-    <ClInclude Include="Source\Entity.h" />
-    <ClInclude Include="Source\GameObject.h" />
-    <ClInclude Include="Source\GOManager.h" />
-    <ClInclude Include="Source\gpch.h" />
-    <ClInclude Include="Source\LoadOBJ.h" />
-    <ClInclude Include="Source\LoadTGA.h" />
-    <ClInclude Include="Source\Material.h" />
+    <ClInclude Include="Source\Logging.h" />
     <ClInclude Include="Source\MatrixStack.h" />
-    <ClInclude Include="Source\Mesh.h" />
-    <ClInclude Include="Source\MeshBuilder.h" />
     <ClInclude Include="Source\Mtx44.h" />
     <ClInclude Include="Source\MyMath.h" />
-    <ClInclude Include="Source\Spell.h" />
-    <ClInclude Include="Source\shader.hpp" />
-    <ClInclude Include="Source\StatusEffect.h" />
     <ClInclude Include="Source\timer.h" />
-    <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\Vector3.h" />
-    <ClInclude Include="Source\Vertex.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1A35F4F2-3CEC-4AE4-836F-0B8A81781A1B}</ProjectGuid>
@@ -94,12 +63,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>Source;$(SolutionDir)glfw/include;$(SolutionDir)glew/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

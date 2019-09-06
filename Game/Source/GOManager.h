@@ -1,14 +1,14 @@
 #pragma once
 
-#include <GameObject.h>
-#include <gpch.h>
+#include "GameObject.h"
+#include "gpch.h"
 
 struct GOManager
 {
-	GOManager() {};
-	~GOManager() {};
+	GOManager() { Init(); }
+	~GOManager();
 
-	void Init() {};
+	void Init();
 
 	std::vector<GameObject*> GOContainer;
 	GameObject* FetchGO();

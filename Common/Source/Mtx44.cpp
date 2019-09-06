@@ -7,7 +7,7 @@
 Matrix 4 by 4 use for affine transformation
 */
 /******************************************************************************/
-#include <gpch.h>
+#include "Mtx44.h"
 /******************************************************************************/
 /*!
 \brief
@@ -399,11 +399,11 @@ Set this matrix to frustum matrix
 	Frustum - back
 */
 /******************************************************************************/
-void Mtx44::SetToFrustum(double left, double right, double bottom, double top, double nearval, double farval) {
-	*this = Mtx44((float)(2 * nearval / (right - left)), 0, 0, 0,
-		0, (float)(2 * nearval / (top - bottom)), 0, 0,
-		(float)((right + left) / (right - left)), (float)((top + bottom) / (top - bottom)), - (float)((farval + nearval) / (farval - nearval)), -1,
-		0, 0, - (float)(2 * farval * nearval / (farval - nearval)), 0);
+void Mtx44::SetToFrustum(double left, double right, double bottom, double top, double near, double far) {
+	*this = Mtx44((float)(2 * near / (right - left)), 0, 0, 0,
+		0, (float)(2 * near / (top - bottom)), 0, 0,
+		(float)((right + left) / (right - left)), (float)((top + bottom) / (top - bottom)), - (float)((far + near) / (far - near)), -1,
+		0, 0, - (float)(2 * far * near / (far - near)), 0);
 }
 
 /******************************************************************************/

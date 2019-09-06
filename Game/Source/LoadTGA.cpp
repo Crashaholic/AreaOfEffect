@@ -1,6 +1,6 @@
-#include <gpch.h>
+#include "gpch.h"
 
-GLuint LoadTGA(const char *file_path)				// load TGA file to memory
+GLuint LoadTGA(const char *file_path, bool NearestNeighbour)				// load TGA file to memory
 {
 	std::ifstream fileStream(file_path, std::ios::binary);
 	if(!fileStream.is_open()) {
@@ -43,8 +43,16 @@ GLuint LoadTGA(const char *file_path)				// load TGA file to memory
 	else //bytesPerPixel == 4
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	if (NearestNeighbour)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	}
 	float maxAnisotropy = 1.f;
 	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (GLint)maxAnisotropy );
@@ -59,7 +67,7 @@ GLuint LoadTGA(const char *file_path)				// load TGA file to memory
 	return texture;						
 }
 
-GLuint Load::TGA(const char* a)
+GLuint Load::TGA(const char * file_path, bool NearestNeighbour)
 {
-	return LoadTGA(a);
+	return LoadTGA(file_path, NearestNeighbour);
 }

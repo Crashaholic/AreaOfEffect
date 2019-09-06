@@ -1,5 +1,4 @@
-
-#include <gpch.h>
+#include "gpch.h"
 
 Mesh::Mesh(const std::string &meshName)
 	: name(meshName)

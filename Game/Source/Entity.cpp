@@ -1,4 +1,4 @@
-#include <gpch.h>
+#include "gpch.h"
 #include "Entity.h"
 
 Entity::~Entity()
@@ -17,10 +17,14 @@ void Entity::CheckStatuses()
 {
 	for (size_t i = 0; i < Statuses.size(); ++i)
 	{
-
+		if (Statuses[i].CheckExpired())
+		{
+			Statuses.erase(Statuses.begin() + i);
+		}
 	}
 }
 
-void Entity::ApplyStatusEffect()
+void Entity::ApplyStatusEffect(Damage dmg, double duration)
 {
+
 }
