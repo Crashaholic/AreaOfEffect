@@ -79,7 +79,7 @@ void SceneGame::Init()
 	p.Init(GOMan.FetchGO());
 	p.InitCam(&camera);
 	p.GO->mass = 10;
-	p.GO->textureID = Load::TGA("Image//cursor.tga");
+	//p.GO->textureID = Load::TGA("Image//cursor.tga");
 
 	Math::InitRNG();
 }
@@ -184,7 +184,6 @@ void SceneGame::Update(double dt)
 	if (vec3(a, b, 1) != vec3(clickpos.x, clickpos.y, 1))
 	{
 		clickpos = vec3( a, b );
-		std::cout << "hey\n";
 		doNotPollMouse = false;
 	}
 
@@ -347,7 +346,6 @@ void SceneGame::Render()
 	
 	modelStack.PushMatrix();
 		modelStack.Translate(p.GO->pos.x, p.GO->pos.y, p.GO->pos.z);
-		modelStack.Scale(10, 10, 10);
 		meshList[GEO_QUAD]->textureID = p.GO->textureID;
 		RenderMesh(meshList[GEO_QUAD], false);
 		meshList[GEO_QUAD]->textureID = 0;
@@ -363,8 +361,10 @@ void SceneGame::Render()
 	std::setprecision(6);
 	modelStack.PushMatrix();
 		modelStack.Translate(cursorGO.pos.x, cursorGO.pos.y, 0);
-		modelStack.Scale(2, 2, 2);
+		meshList[GEO_QUAD]->textureID = cursorGO.textureID;
+		modelStack.Scale(5, 5, 5);
 		RenderMesh(meshList[GEO_QUAD], false);
+		meshList[GEO_QUAD]->textureID = 0;
 	modelStack.PopMatrix();
 
 
