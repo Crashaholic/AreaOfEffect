@@ -5,8 +5,8 @@ void Player::Init(GameObject * go)
 {
 	GO = go;
 	(GO->hookingClass) = std::type_index(typeid(Player));
-	speed = 5;
-	maxSpeed = 10;
+	speed = 50;
+	maxSpeed = 20;
 }
 
 void Player::InitCam(Camera * cam) 
@@ -18,12 +18,13 @@ void Player::MoveX_KB(bool dirX, double dt)
 {
 	if (dirX)
 	{
-		GO->pos.x += speed * dt;
+		GO->vel.x += speed * dt;
 	}
 	else
 	{
-		GO->pos.x -= speed * dt;
+		GO->vel.x -= speed * dt;
 	}
+	GO->vel.x = Math::Clamp(GO->vel.x, -maxSpeed, maxSpeed);
 	cameraAttachment->position.x = GO->pos.x;
 	cameraAttachment->target.x = GO->pos.x;
 }
@@ -32,26 +33,29 @@ void Player::MoveY_KB(bool dirY, double dt)
 {
 	if (dirY)
 	{
-		GO->pos.y += speed * dt;
+		GO->vel.y += speed * dt;
 	}
 	else
 	{
-		GO->pos.y -= speed * dt;
+		GO->vel.y -= speed * dt;
 	}
+	GO->vel.y = Math::Clamp(GO->vel.y, -maxSpeed, maxSpeed);
 	cameraAttachment->position.y = GO->pos.y;
 	cameraAttachment->target.y = GO->pos.y;
 }
 
 void Player::MoveX_Pad(float axis, double dt)
 {
-	GO->pos.x += axis * speed * dt;
+	GO->vel.x += axis * speed * dt;
+	GO->vel.x = Math::Clamp(GO->vel.x, -maxSpeed, maxSpeed);
 	cameraAttachment->position.x = GO->pos.x;
 	cameraAttachment->target.x = GO->pos.x;
 }
 
 void Player::MoveY_Pad(float axis, double dt)
 {
-	GO->pos.y -= axis * speed * dt;
+	GO->vel.y -= axis * speed * dt;
+	GO->vel.y = Math::Clamp(GO->vel.y, -maxSpeed, maxSpeed);
 	cameraAttachment->position.y = GO->pos.y;
 	cameraAttachment->target.y = GO->pos.y;
 }
