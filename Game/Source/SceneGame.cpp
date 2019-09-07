@@ -225,11 +225,18 @@ void SceneGame::Update(double dt)
 
 	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
 	{
-		//GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
+		GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
+
 		if (GOMan.GOContainer[i]->hookingClass == std::type_index(typeid(Player)))
 		{
 			p.cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
 			p.cameraAttachment->target = GOMan.GOContainer[i]->pos;
+		}
+
+		if (!GOMan.GOContainer[i]->vel.IsZero())
+		{
+			vec3 friction = (0.0075f * GOMan.GOContainer[i]->mass * vec3(0, -9.8, 0)).Length() * GOMan.GOContainer[i]->vel.Normalized();
+			GOMan.GOContainer[i]->vel -= friction;
 		}
 	}
 
