@@ -1,31 +1,44 @@
 #include "gpch.h"
 #include "Player.h"
 
+void Player::Init(GameObject * go)
+{
+	GO = go;
+	(GO->hookingClass) = std::type_index(typeid(Player));
+	speed = 5;
+}
+
+void Player::InitCam(Camera * cam) 
+{ 
+	this->cameraAttachment = cam;
+	cameraAttachment->position = GO->pos;
+	cameraAttachment->target = GO->pos + 1;
+}
+
 void Player::MoveX_KB(bool dirX, double dt)
 {
 	if (dirX)
 	{
-		GO->pos.x += speed * dt;
+		GO->vel.x += speed * dt;
 	}
 	else
 	{
-		GO->pos.x -= speed * dt;
+		GO->vel.x -= speed * dt;
 	}
 
 	cameraAttachment->position.x = GO->pos.x;
 	cameraAttachment->target.x = GO->pos.x;
-	std::cout << GO->pos.x << '\n';
 }
 
 void Player::MoveY_KB(bool dirY, double dt)
 {
 	if (dirY)
 	{
-		GO->pos.y += speed * dt;
+		GO->vel.y += speed * dt;
 	}
 	else
 	{
-		GO->pos.y -= speed * dt;
+		GO->vel.y -= speed * dt;
 	}
 
 	cameraAttachment->position.y = GO->pos.y;
@@ -35,7 +48,7 @@ void Player::MoveY_KB(bool dirY, double dt)
 double RoundOff(double N, double n)
 {
 	int h;
-	double l, a, b, c, d, e, i, j, m, f, g;
+	double b, c, d, e, i, j, m, f;
 	b = N;
 	c = floor(N);
 
@@ -64,7 +77,7 @@ void Player::MoveX_Pad(float axis, double dt)
 	float temp = (float)RoundOff((double)axis, 1);
 	if (temp != 0.000f)
 		std::cout << "LEFT STICK X: " << temp << ", ";
-	GO->pos.x += temp * speed * dt;
+	GO->vel.x += temp * speed * dt;
 	cameraAttachment->position.x = GO->pos.x;
 	cameraAttachment->target.x = GO->pos.x;
 }
@@ -74,7 +87,7 @@ void Player::MoveY_Pad(float axis, double dt)
 	float temp = (float)RoundOff((double)axis, 1);
 	if (temp != 0.000f)
 		std::cout << "LEFT STICK Y: " << temp << '\n';
-	GO->pos.y -= temp * speed * dt;
+	GO->vel.y -= temp * speed * dt;
 	cameraAttachment->position.y = GO->pos.y;
 	cameraAttachment->target.y = GO->pos.y;
 }

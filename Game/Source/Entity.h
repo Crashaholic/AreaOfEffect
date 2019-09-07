@@ -16,6 +16,7 @@ struct Entity
 	Resistances resistance;
 
 	std::vector<StatusEffect> Statuses;
+	virtual void Init(GameObject* go) = 0;
 	virtual void Update(double dt);
 	void CheckStatuses();
 	void ApplyStatusEffect(Damage dmg, double duration);

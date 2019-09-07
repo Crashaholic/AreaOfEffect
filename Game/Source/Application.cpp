@@ -82,10 +82,16 @@ void Application::Init()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
 
 
+	usrsttngs.LoadSettings("game.ini");
+
 	//Create a window and create its OpenGL context
-	m_width = 800;
-	m_height = 600;
-	m_window = glfwCreateWindow(m_width, m_height, "Physics", NULL, NULL);
+	m_width = usrsttngs.windowWidth;
+	m_height = usrsttngs.windowHeight;
+	if (!usrsttngs.windowedMode)
+	{
+		glfwWindowHint(GLFW_DECORATED, false);
+	}
+	m_window = glfwCreateWindow(m_width, m_height, "AreaOfEffect", usrsttngs.windowFullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
 
 	//If the window couldn't be created
 	if (!m_window)

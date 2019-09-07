@@ -27,10 +27,6 @@ void SceneGame::Init()
 	glGenVertexArrays(1, &m_vertexArrayID);
 	glBindVertexArray(m_vertexArrayID);
 
-
-	//m_worldHeight = 100.f;
-	//m_worldWidth = m_worldHeight * (float)Application::GetWindowWidth() / Application::GetWindowHeight();
-
 	m_worldHeight = 100.f;
 	m_worldWidth = 100.f;
 	
@@ -72,24 +68,24 @@ void SceneGame::Init()
 	meshList[GEO_BALL] = MeshBuilder::GenerateSphere("ball", Color(1, 1, 1), 10, 10, 1.f);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
-	meshList[GEO_TEXT]->textureID = LoadTGA("Image//calibri.tga");
+	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga");
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
 	bLightEnabled = false;
 
 	m_speed = 1.f;
-	p.GO = GOMan.FetchGO();
+	p.Init(GOMan.FetchGO());
 	p.GO->pos = {m_worldWidth / 2.f, m_worldHeight / 2.f };
-	p.cameraAttachment = &camera;
+	p.InitCam(&camera);
 	Math::InitRNG();
 }
 
 void SceneGame::Update(double dt)
 {
 	//Keyboard Section
-	if(Application::IsKeyPressed('1') && Application::IsKeyPressed(VK_SHIFT))
+	if(Application::GetInstance().IsKeyPressed('1') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	if(Application::IsKeyPressed('2') && Application::IsKeyPressed(VK_SHIFT))
+	if(Application::GetInstance().IsKeyPressed('2') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// poll controller first
@@ -102,25 +98,25 @@ void SceneGame::Update(double dt)
 		p.MoveY_Pad(axes[1], dt);
 	}
 	//then poll kb
-	if (Application::IsKeyPressed('W'))
+	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
 	{
 		//camera.position.y += 10 * dt;
 		//camera.target.y += 10 * dt;
 		p.MoveY_KB(1, dt);
 	}
-	if (Application::IsKeyPressed('S'))
+	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
 	{
 		//camera.position.y -= 10 * dt;
 		//camera.target.y -= 10 * dt;
 		p.MoveY_KB(0, dt);
 	}
-	if (Application::IsKeyPressed('D'))
+	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
 	{
 		//camera.position.x += 10 * dt;
 		//camera.target.x += 10 * dt;
 		p.MoveX_KB(1, dt);
 	}
-	if (Application::IsKeyPressed('A'))
+	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
 	{
 		//camera.position.x -= 10 * dt;
 		//camera.target.x -= 10 * dt;
@@ -130,15 +126,15 @@ void SceneGame::Update(double dt)
 	//Mouse Section
 	static bool bLButtonState = false;
 	//Exercise 10: ghost code here
-	if(!bLButtonState && Application::IsMousePressed(0))
+	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = true;
 		std::cout << "LBUTTON DOWN" << std::endl;
 		
 		double x, y;
-		Application::GetCursorPos(&x, &y);
-		int w = Application::GetWindowWidth();
-		int h = Application::GetWindowHeight();
+		Application::GetInstance().GetCursorPos(&x, &y);
+		int w = Application::GetInstance().GetWindowWidth();
+		int h = Application::GetInstance().GetWindowHeight();
 
 		Vector3 clickpos;
 
@@ -146,19 +142,19 @@ void SceneGame::Update(double dt)
 		clickpos.y = static_cast<float>(m_worldHeight - y / static_cast<float>(h) * m_worldHeight);
 		std::cout << clickpos << '\n';
 	}
-	else if(bLButtonState && !Application::IsMousePressed(0))
+	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = false;
 		std::cout << "LBUTTON UP" << std::endl;
 	}
 	
 	static bool bRButtonState = false;
-	if(!bRButtonState && Application::IsMousePressed(1))
+	if(!bRButtonState && Application::GetInstance().IsMousePressed(1))
 	{
 		bRButtonState = true;
 		std::cout << "RBUTTON DOWN" << std::endl;
 	}
-	else if(bRButtonState && !Application::IsMousePressed(1))
+	else if(bRButtonState && !Application::GetInstance().IsMousePressed(1))
 	{
 		bRButtonState = false;
 		std::cout << "RBUTTON UP" << std::endl;
@@ -166,6 +162,18 @@ void SceneGame::Update(double dt)
 
 	//Physics Simulation Section
 	fps = (float)(1.f / dt);
+
+	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
+	{
+		GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
+		if (GOMan.GOContainer[i]->hookingClass == std::type_index(typeid(Player)))
+		{
+			p.cameraAttachment->position = GOMan.GOContainer[i]->pos;
+			p.cameraAttachment->target = GOMan.GOContainer[i]->pos + 1;
+			std::cout << "target: " << p.cameraAttachment->target << '\n';
+		}
+	}
+
 }
 
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
@@ -284,10 +292,10 @@ void SceneGame::Render()
 
 	Mtx44 projection;
 	projection.SetToOrtho(
-		-(float)Application::GetWindowWidth() / 2 / 10,
-		 (float)Application::GetWindowWidth() / 2 / 10,
-		-(float)Application::GetWindowHeight() / 2 / 10,
-		 (float)Application::GetWindowHeight() / 2 / 10,
+		-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+		 (float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+		-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
+		 (float)Application::GetInstance().GetWindowHeight() / 2 / 10,
 		-10, 
 		 10);
 	projectionStack.LoadMatrix(projection);
@@ -316,9 +324,14 @@ void SceneGame::Render()
 	fpsCounter << "FPS: " << std::setprecision(2) << fps;
 	std::setprecision(6);
 
+	//=============
+	//     UI
+	//=============
+
 	viewStack.LoadIdentity();
+	// Top Left
 	modelStack.PushMatrix();
-		modelStack.Translate(-(float)Application::GetWindowWidth() / 2 / 10, (float)Application::GetWindowHeight() / 2 / 10, 0);
+		modelStack.Translate(-(float)Application::GetInstance().GetWindowWidth() / 2 / 10, (float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
 		//modelStack.PushMatrix();
 		//	RenderMesh(meshList[GEO_QUAD], false);
 		//modelStack.PopMatrix();
@@ -329,15 +342,11 @@ void SceneGame::Render()
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 
+	// Top Right
 	modelStack.PushMatrix();
-		modelStack.Translate(-(float)Application::GetWindowWidth() / 2 / 10, (float)Application::GetWindowHeight() / 2 / 10, 0);
-		//modelStack.PushMatrix();
-		//	RenderMesh(meshList[GEO_QUAD], false);
-		//modelStack.PopMatrix();
+		modelStack.Translate((float)Application::GetInstance().GetWindowWidth() / 2 / 10, (float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
 		modelStack.PushMatrix();
-			modelStack.Translate(2, -2, 0);
-			modelStack.Scale(2, 2, 2);
-			RenderText(meshList[GEO_TEXT], fpsCounter.str() , {1, 1, 1});
+			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 

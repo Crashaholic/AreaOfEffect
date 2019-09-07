@@ -6,9 +6,15 @@
 
 #include "Camera.h"
 
+#include <typeindex>
+#include <typeinfo>
+
 struct Player : public Entity
 {
-	Player() { speed = 5; };
+	Player() {}
+
+	virtual void Init(GameObject* go);
+	void InitCam(Camera* cam);
 	std::vector<Spell> CurrentHand;
 	Camera* cameraAttachment;
 	void MoveX_KB(bool dirX, double dt); // 0 - left, 1 - right

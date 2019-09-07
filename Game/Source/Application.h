@@ -3,6 +3,7 @@
 #define APPLICATION_H
 
 #include "timer.h"
+#include "SettingsHandler.h"
 
 class Application
 {
@@ -20,6 +21,8 @@ public:
 	static void GetCursorPos(double *xpos, double *ypos);
 	static int GetWindowWidth();
 	static int GetWindowHeight();
+
+	GameUserSettings usrsttngs;
 
 private:
 	Application();

@@ -39,6 +39,7 @@
     <ClCompile Include="Source\Player.cpp" />
     <ClCompile Include="Source\Resistances.cpp" />
     <ClCompile Include="Source\SceneGame.cpp" />
+    <ClCompile Include="Source\SettingsHandler.cpp" />
     <ClCompile Include="Source\shader.cpp" />
     <ClCompile Include="Source\Spell.cpp" />
     <ClCompile Include="Source\StatusEffect.cpp" />
@@ -64,6 +65,7 @@
     <ClInclude Include="Source\Resistances.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\SceneGame.h" />
+    <ClInclude Include="Source\SettingsHandler.h" />
     <ClInclude Include="Source\shader.hpp" />
     <ClInclude Include="Source\Spell.h" />
     <ClInclude Include="Source\StatusEffect.h" />

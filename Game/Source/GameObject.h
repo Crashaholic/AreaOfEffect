@@ -2,6 +2,7 @@
 #define GAME_OBJECT_H
 
 #include "Vector3.h"
+#include <typeindex>
 
 struct GameObject
 {
@@ -18,6 +19,8 @@ struct GameObject
 	Vector3 scale;
 	bool active;
 	float mass;
+
+	std::type_index hookingClass;
 
 	GameObject(GAMEOBJECT_TYPE typeValue = GO_BALL);
 	~GameObject();
