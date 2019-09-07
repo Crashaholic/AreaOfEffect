@@ -179,17 +179,15 @@ void SceneGame::Update(double dt)
 		bLButtonState = true;
 		std::cout << "LBUTTON DOWN" << std::endl;
 		
-		double x, y;
-		Application::GetInstance().GetCursorPos(&x, &y);
-		int w = Application::GetInstance().GetWindowWidth();
-		int h = Application::GetInstance().GetWindowHeight();
+		double a, b;
+		Application::GetInstance().GetCursorPos(&a, &b);
 
-		Vector3 clickpos;
+		float x = (2.0f * a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
+		float y = 1.0f - (2.0f * b) / (float)Application::GetInstance().GetWindowHeight();
+		float z = 1.0f;
+		vec3 ray_nds = vec3(x, y, z);
 
-		clickpos.x = static_cast<float>(x / static_cast<float>(w) * m_worldWidth);
-		clickpos.y = static_cast<float>(m_worldHeight - y / static_cast<float>(h) * m_worldHeight);
-
-		Mtx44 InvProj;
+		mat4 InvProj, InvView, InvTran;
 		InvProj.SetToOrtho(
 			-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
 			(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
@@ -197,10 +195,25 @@ void SceneGame::Update(double dt)
 			(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
 			-10,
 			10);
+
 		InvProj = InvProj.GetInverse();
 
+		InvView.SetToLookAt(
+			camera.position.x, camera.position.y, camera.position.z,
+			camera.target.x, camera.target.y, camera.target.z,
+			camera.up.x, camera.up.y, camera.up.z
+		);
 
-		std::cout << clickpos << '\n';
+		InvView = InvView.GetInverse();
+
+		InvTran.SetToTranslation(camera.position.x, camera.position.y, camera.position.z);
+		InvTran = InvTran.GetInverse();
+
+		Mtx44 temp = InvProj * InvView * InvTran;
+
+		ray_nds = temp * ray_nds;
+
+		std::cout << ray_nds << '\n';
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
@@ -232,7 +245,6 @@ void SceneGame::Update(double dt)
 			p.cameraAttachment->target = GOMan.GOContainer[i]->pos;
 		}
 	}
-
 }
 
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
