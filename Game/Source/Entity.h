@@ -25,6 +25,7 @@ struct Entity
 
 	int health;
 	float speed;
+	float maxSpeed;
 
 };
 

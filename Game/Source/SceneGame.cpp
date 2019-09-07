@@ -75,9 +75,37 @@ void SceneGame::Init()
 
 	m_speed = 1.f;
 	p.Init(GOMan.FetchGO());
-	p.GO->pos = {m_worldWidth / 2.f, m_worldHeight / 2.f };
+	//p.GO->pos = {m_worldWidth / 2.f, m_worldHeight / 2.f };
 	p.InitCam(&camera);
+	p.GO->mass = 10;
 	Math::InitRNG();
+}
+
+double RoundOff(double N, double n)
+{
+	int h;
+	double b, c, d, e, i, j, m, f;
+	b = N;
+	c = floor(N);
+
+	for (i = 0; b >= 1; ++i)
+		b = b / 10;
+
+	d = n - i;
+	b = N;
+	b = b * pow(10, d);
+	e = b + 0.5;
+	if ((float)e == (float)ceil(b)) {
+		f = (ceil(b));
+		h = f - 2;
+		if (h % 2 != 0) {
+			e = e - 1;
+		}
+	}
+	j = floor(e);
+	m = pow(10, d);
+	j = j / m;
+	return j;
 }
 
 void SceneGame::Update(double dt)
@@ -88,39 +116,59 @@ void SceneGame::Update(double dt)
 	if(Application::GetInstance().IsKeyPressed('2') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	bool SkipKBXDirInput = false;
+	bool SkipKBYDirInput = false;
+
 	// poll controller first
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 	if (present == 1)
 	{
 		int axesCount;
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-		p.MoveX_Pad(axes[0], dt);
-		p.MoveY_Pad(axes[1], dt);
+
+		float temp = (float)RoundOff((double)axes[0], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			SkipKBXDirInput = true;
+			p.MoveX_Pad(temp, dt);
+		}
+		temp = (float)RoundOff((double)axes[1], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			SkipKBYDirInput = true;
+			p.MoveY_Pad(axes[1], dt);
+		}
 	}
 	//then poll kb
-	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
+	if (!SkipKBYDirInput)
 	{
-		//camera.position.y += 10 * dt;
-		//camera.target.y += 10 * dt;
-		p.MoveY_KB(1, dt);
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
+		{
+			//camera.position.y += 10 * dt;
+			//camera.target.y += 10 * dt;
+			p.MoveY_KB(1, dt);
+		}
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
+		{
+			//camera.position.y -= 10 * dt;
+			//camera.target.y -= 10 * dt;
+			p.MoveY_KB(0, dt);
+		}
 	}
-	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
+	if (!SkipKBXDirInput)
 	{
-		//camera.position.y -= 10 * dt;
-		//camera.target.y -= 10 * dt;
-		p.MoveY_KB(0, dt);
-	}
-	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
-	{
-		//camera.position.x += 10 * dt;
-		//camera.target.x += 10 * dt;
-		p.MoveX_KB(1, dt);
-	}
-	if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
-	{
-		//camera.position.x -= 10 * dt;
-		//camera.target.x -= 10 * dt;
-		p.MoveX_KB(0, dt);
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
+		{
+			//camera.position.x += 10 * dt;
+			//camera.target.x += 10 * dt;
+			p.MoveX_KB(1, dt);
+		}
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
+		{
+			//camera.position.x -= 10 * dt;
+			//camera.target.x -= 10 * dt;
+			p.MoveX_KB(0, dt);
+		}
 	}
 
 	//Mouse Section
@@ -140,6 +188,18 @@ void SceneGame::Update(double dt)
 
 		clickpos.x = static_cast<float>(x / static_cast<float>(w) * m_worldWidth);
 		clickpos.y = static_cast<float>(m_worldHeight - y / static_cast<float>(h) * m_worldHeight);
+
+		Mtx44 InvProj;
+		InvProj.SetToOrtho(
+			-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+			(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+			-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
+			(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
+			-10,
+			10);
+		InvProj = InvProj.GetInverse();
+
+
 		std::cout << clickpos << '\n';
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
@@ -165,12 +225,11 @@ void SceneGame::Update(double dt)
 
 	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
 	{
-		GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
+		//GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
 		if (GOMan.GOContainer[i]->hookingClass == std::type_index(typeid(Player)))
 		{
-			p.cameraAttachment->position = GOMan.GOContainer[i]->pos;
-			p.cameraAttachment->target = GOMan.GOContainer[i]->pos + 1;
-			std::cout << "target: " << p.cameraAttachment->target << '\n';
+			p.cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
+			p.cameraAttachment->target = GOMan.GOContainer[i]->pos;
 		}
 	}
 
@@ -181,7 +240,6 @@ void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
 	if(!mesh || mesh->textureID <= 0)
 		return;
 	
-	glDisable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mesh->textureID);
 	defaultShader.SetBool("textEnabled", true);
@@ -201,47 +259,6 @@ void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	//glUniform1i(m_parameters[U_TEXT_ENABLED], 0);
 	defaultShader.SetBool("textEnabled", false);
-	glEnable(GL_DEPTH_TEST);
-}
-
-void SceneGame::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, float size, float x, float y)
-{
-	if(!mesh || mesh->textureID <= 0)
-		return;
-
-	glDisable(GL_DEPTH_TEST);
-	Mtx44 ortho;
-	ortho.SetToOrtho(0, 80, 0, 60, -10, 10);
-	projectionStack.PushMatrix();
-	projectionStack.LoadMatrix(ortho);
-	viewStack.PushMatrix();
-	viewStack.LoadIdentity();
-	modelStack.PushMatrix();
-	modelStack.LoadIdentity();
-	modelStack.Translate(x, y, 0);
-	modelStack.Scale(size, size, size);
-	defaultShader.SetBool("textEnabled", true);
-	defaultShader.SetBool("lightEnabled", false);
-	defaultShader.SetBool("colorTextureEnabled", true);
-	defaultShader.SetVec3("textColor", { color.r,color.g,color.b });
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, mesh->textureID);
-	defaultShader.SetInt("colorTexture", 0);
-	for(unsigned i = 0; i < text.length(); ++i)
-	{
-		Mtx44 characterSpacing;
-		characterSpacing.SetToTranslation(i * 1.0f + 0.5f, 0.5f, 0); //1.0f is the spacing of each character, you may change this value
-		Mtx44 MVP = projectionStack.Top() * viewStack.Top() * modelStack.Top() * characterSpacing;
-		defaultShader.SetMat4("MVP", MVP);
-
-		mesh->Render((unsigned)text[i] * 6, 6);
-	}
-	glBindTexture(GL_TEXTURE_2D, 0);
-	defaultShader.SetBool("textEnabled", false);
-	modelStack.PopMatrix();
-	viewStack.PopMatrix();
-	projectionStack.PopMatrix();
-	glEnable(GL_DEPTH_TEST);
 }
 
 void SceneGame::RenderMesh(Mesh *mesh, bool enableLight)
@@ -324,6 +341,10 @@ void SceneGame::Render()
 	fpsCounter << "FPS: " << std::setprecision(2) << fps;
 	std::setprecision(6);
 
+	std::stringstream playerPos;
+	playerPos << p.GO->pos;
+	std::setprecision(6);
+
 	//=============
 	//     UI
 	//=============
@@ -347,6 +368,31 @@ void SceneGame::Render()
 		modelStack.Translate((float)Application::GetInstance().GetWindowWidth() / 2 / 10, (float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
+	modelStack.PopMatrix();
+
+	// Bot Right
+	modelStack.PushMatrix();
+		modelStack.Translate((float)Application::GetInstance().GetWindowWidth() / 2 / 10, -(float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
+		modelStack.PushMatrix();
+			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
+	modelStack.PopMatrix();
+
+	// Bot Left
+	modelStack.PushMatrix();
+		modelStack.Translate(-(float)Application::GetInstance().GetWindowWidth() / 2 / 10, -(float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
+		modelStack.PushMatrix();
+			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
+	modelStack.PopMatrix();
+
+	// Mid
+	modelStack.PushMatrix();
+		modelStack.Translate(0, 0, 0);
+		modelStack.PushMatrix();
+			modelStack.Scale(2, 2, 2);
+			RenderText(meshList[GEO_TEXT], playerPos.str(), { 1, 0, 1 });
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 
