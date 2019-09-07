@@ -51,8 +51,10 @@ private:
 
 	float fps;
 
-	Player p;
+	GameObject cursorGO;
 
+	Player p;
+	vec3 clickpos;
 	//Physics
 	std::vector<GameObject *> m_goList;
 	float m_speed;

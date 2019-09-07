@@ -24,6 +24,8 @@ struct GameObject
 
 	GameObject(GAMEOBJECT_TYPE typeValue = GO_BALL);
 	~GameObject();
+
+	GLuint textureID;
 };
 
 #endif

@@ -68,16 +68,19 @@ void SceneGame::Init()
 	meshList[GEO_BALL] = MeshBuilder::GenerateSphere("ball", Color(1, 1, 1), 10, 10, 1.f);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
-	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga");
+	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
+
+	cursorGO.textureID = LoadTGA("Image//cursor.tga");
 
 	bLightEnabled = false;
 
 	m_speed = 1.f;
 	p.Init(GOMan.FetchGO());
-	//p.GO->pos = {m_worldWidth / 2.f, m_worldHeight / 2.f };
 	p.InitCam(&camera);
 	p.GO->mass = 10;
+	p.GO->textureID = Load::TGA("Image//cursor.tga");
+
 	Math::InitRNG();
 }
 
@@ -143,51 +146,56 @@ void SceneGame::Update(double dt)
 	if (!SkipKBYDirInput)
 	{
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
-		{
-			//camera.position.y += 10 * dt;
-			//camera.target.y += 10 * dt;
 			p.MoveY_KB(1, dt);
-		}
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
-		{
-			//camera.position.y -= 10 * dt;
-			//camera.target.y -= 10 * dt;
 			p.MoveY_KB(0, dt);
-		}
 	}
 	if (!SkipKBXDirInput)
 	{
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
-		{
-			//camera.position.x += 10 * dt;
-			//camera.target.x += 10 * dt;
 			p.MoveX_KB(1, dt);
-		}
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
-		{
-			//camera.position.x -= 10 * dt;
-			//camera.target.x -= 10 * dt;
 			p.MoveX_KB(0, dt);
+	}
+
+	static bool doNotPollMouse = false;
+	if (present == 1)
+	{
+		int axesCount;
+		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+
+		float temp = (float)RoundOff((double)axes[2], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			cursorGO.pos.x += (float)dt * temp * 10;
+			doNotPollMouse = true;
+		}
+		temp = (float)RoundOff((double)axes[3], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			cursorGO.pos.y -= (float)dt * temp * 10;
+			doNotPollMouse = true;
 		}
 	}
 
 	//Mouse Section
-	static bool bLButtonState = false;
-	//Exercise 10: ghost code here
-	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
+	double a, b;
+	Application::GetInstance().GetCursorPos(&a, &b);
+	if (vec3(a, b, 1) != vec3(clickpos.x, clickpos.y, 1))
 	{
-		bLButtonState = true;
-		std::cout << "LBUTTON DOWN" << std::endl;
-		
-		double a, b;
-		Application::GetInstance().GetCursorPos(&a, &b);
+		clickpos = vec3( a, b );
+		std::cout << "hey\n";
+		doNotPollMouse = false;
+	}
 
+	if (!doNotPollMouse)
+	{
 		float x = (2.0f * a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
 		float y = 1.0f - (2.0f * b) / (float)Application::GetInstance().GetWindowHeight();
 		float z = 1.0f;
-		vec3 ray_nds = vec3(x, y, z);
+		cursorGO.pos = vec3(x, y, z);
 
-		mat4 InvProj, InvView, InvTran;
+		mat4 InvProj, InvView;
 		InvProj.SetToOrtho(
 			-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
 			(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
@@ -205,32 +213,30 @@ void SceneGame::Update(double dt)
 		);
 
 		InvView = InvView.GetInverse();
+		
+		cursorGO.pos = InvProj * cursorGO.pos;
+		cursorGO.pos = InvView * cursorGO.pos;
+		cursorGO.pos += camera.position;
+	}
 
-		InvTran.SetToTranslation(camera.position.x, camera.position.y, camera.position.z);
-		InvTran = InvTran.GetInverse();
-
-		Mtx44 temp = InvProj * InvView * InvTran;
-
-		ray_nds = temp * ray_nds;
-
-		std::cout << ray_nds << '\n';
+	static bool bLButtonState = false;
+	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
+	{
+		bLButtonState = true;
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = false;
-		std::cout << "LBUTTON UP" << std::endl;
 	}
 	
 	static bool bRButtonState = false;
 	if(!bRButtonState && Application::GetInstance().IsMousePressed(1))
 	{
 		bRButtonState = true;
-		std::cout << "RBUTTON DOWN" << std::endl;
 	}
 	else if(bRButtonState && !Application::GetInstance().IsMousePressed(1))
 	{
 		bRButtonState = false;
-		std::cout << "RBUTTON UP" << std::endl;
 	}
 
 	//Physics Simulation Section
@@ -239,7 +245,7 @@ void SceneGame::Update(double dt)
 	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
 	{
 		//GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
-		if (GOMan.GOContainer[i]->hookingClass == std::type_index(typeid(Player)))
+		if (GOMan.GOIsHookedOnByClass(i, Player)/*isHookedby<Player>(i)*/)
 		{
 			p.cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
 			p.cameraAttachment->target = GOMan.GOContainer[i]->pos;
@@ -341,7 +347,10 @@ void SceneGame::Render()
 	
 	modelStack.PushMatrix();
 		modelStack.Translate(p.GO->pos.x, p.GO->pos.y, p.GO->pos.z);
+		modelStack.Scale(10, 10, 10);
+		meshList[GEO_QUAD]->textureID = p.GO->textureID;
 		RenderMesh(meshList[GEO_QUAD], false);
+		meshList[GEO_QUAD]->textureID = 0;
 	modelStack.PopMatrix();
 
 	modelStack.PushMatrix();
@@ -349,17 +358,28 @@ void SceneGame::Render()
 		RenderMesh(meshList[GEO_AXES], false);
 	modelStack.PopMatrix();
 
+	std::stringstream clickedpos;
+	clickedpos << std::setprecision(1) << clickpos;
+	std::setprecision(6);
+	modelStack.PushMatrix();
+		modelStack.Translate(cursorGO.pos.x, cursorGO.pos.y, 0);
+		modelStack.Scale(2, 2, 2);
+		RenderMesh(meshList[GEO_QUAD], false);
+	modelStack.PopMatrix();
+
+
+
+	//=============
+	//     UI
+	//=============
+
 	std::stringstream fpsCounter;
 	fpsCounter << "FPS: " << std::setprecision(2) << fps;
 	std::setprecision(6);
 
 	std::stringstream playerPos;
-	playerPos << p.GO->pos;
+	playerPos << std::setprecision(2) << p.GO->pos;
 	std::setprecision(6);
-
-	//=============
-	//     UI
-	//=============
 
 	viewStack.LoadIdentity();
 	// Top Left
@@ -403,6 +423,7 @@ void SceneGame::Render()
 	modelStack.PushMatrix();
 		modelStack.Translate(0, 0, 0);
 		modelStack.PushMatrix();
+			modelStack.Translate(0, 5, 0);
 			modelStack.Scale(2, 2, 2);
 			RenderText(meshList[GEO_TEXT], playerPos.str(), { 1, 0, 1 });
 		modelStack.PopMatrix();
