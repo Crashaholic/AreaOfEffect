@@ -30,6 +30,7 @@ GameObject* GOManager::FetchGO()
 	{
 		if (!GOContainer[i]->active)
 		{
+			GOContainer[i]->active = true;
 			return GOContainer[i];
 		}
 	}

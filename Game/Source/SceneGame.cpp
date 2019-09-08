@@ -65,8 +65,8 @@ void SceneGame::Init()
 		meshList[i] = NULL;
 	}
 	meshList[GEO_AXES] = MeshBuilder::GenerateAxes("reference", 1000, 1000, 1000);
-	meshList[GEO_BALL] = MeshBuilder::GenerateSphere("ball", Color(1, 1, 1), 10, 10, 1.f);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
+	meshList[GEO_BAR] = MeshBuilder::GenerateBar("quad", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
 	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
@@ -76,10 +76,14 @@ void SceneGame::Init()
 	bLightEnabled = false;
 
 	m_speed = 1.f;
-	p.Init(GOMan.FetchGO());
-	p.InitCam(&camera);
-	p.GO->mass = 10;
-	//p.GO->textureID = Load::TGA("Image//cursor.tga");
+
+	player = new Player();
+	player->Init(GOMan.FetchGO());
+	player->InitCam(&camera);
+	player->GO->mass = 10;
+	m_goList.push_back(player);
+
+	projectile.Init(GOMan.FetchGO());
 
 	Math::InitRNG();
 }
@@ -100,7 +104,7 @@ double RoundOff(double N, double n)
 	e = b + 0.5;
 	if ((float)e == (float)ceil(b)) {
 		f = (ceil(b));
-		h = f - 2;
+		h = int(f - 2);
 		if (h % 2 != 0) {
 			e = e - 1;
 		}
@@ -118,45 +122,7 @@ void SceneGame::Update(double dt)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	if(Application::GetInstance().IsKeyPressed('2') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	bool SkipKBXDirInput = false;
-	bool SkipKBYDirInput = false;
-
-	// poll controller first
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
-	if (present == 1)
-	{
-		int axesCount;
-		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-
-		float temp = (float)RoundOff((double)axes[0], 1);
-		if (temp > 0.0f || temp < 0.0f)
-		{
-			SkipKBXDirInput = true;
-			p.MoveX_Pad(temp, dt);
-		}
-		temp = (float)RoundOff((double)axes[1], 1);
-		if (temp > 0.0f || temp < 0.0f)
-		{
-			SkipKBYDirInput = true;
-			p.MoveY_Pad(axes[1], dt);
-		}
-	}
-	//then poll kb
-	if (!SkipKBYDirInput)
-	{
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
-			p.MoveY_KB(1, dt);
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
-			p.MoveY_KB(0, dt);
-	}
-	if (!SkipKBXDirInput)
-	{
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
-			p.MoveX_KB(1, dt);
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
-			p.MoveX_KB(0, dt);
-	}
 
 	static bool doNotPollMouse = false;
 	if (present == 1)
@@ -167,13 +133,15 @@ void SceneGame::Update(double dt)
 		float temp = (float)RoundOff((double)axes[2], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
-			cursorGO.pos.x += (float)dt * temp * 10;
+			if (Application::GetInstance().usrsttngs.cursorInvX) temp = -temp;
+			cursorGO.pos.x += (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensX;
 			doNotPollMouse = true;
 		}
 		temp = (float)RoundOff((double)axes[3], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
-			cursorGO.pos.y -= (float)dt * temp * 10;
+			if (Application::GetInstance().usrsttngs.cursorInvY) temp = -temp;
+			cursorGO.pos.y -= (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensY;
 			doNotPollMouse = true;
 		}
 	}
@@ -181,28 +149,21 @@ void SceneGame::Update(double dt)
 	//Mouse Section
 	double a, b;
 	Application::GetInstance().GetCursorPos(&a, &b);
-	if (vec3(a, b, 1) != vec3(clickpos.x, clickpos.y, 1))
+	if (vec3((float)a, (float)b, 1) != vec3(clickpos.x, clickpos.y, 1))
 	{
-		clickpos = vec3( a, b );
+		clickpos = vec3((float)a, (float)b);
 		doNotPollMouse = false;
 	}
 
 	if (!doNotPollMouse)
 	{
-		float x = (2.0f * a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
-		float y = 1.0f - (2.0f * b) / (float)Application::GetInstance().GetWindowHeight();
+		float x = (2.0f * (float)a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
+		float y = 1.0f - (2.0f * (float)b) / (float)Application::GetInstance().GetWindowHeight();
 		float z = 1.0f;
 		cursorGO.pos = vec3(x, y, z);
 
 		mat4 InvProj, InvView;
-		InvProj.SetToOrtho(
-			-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-			(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-			-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-			(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-			-10,
-			10);
-
+		InvProj = projectionStack.Top();
 		InvProj = InvProj.GetInverse();
 
 		InvView.SetToLookAt(
@@ -212,16 +173,65 @@ void SceneGame::Update(double dt)
 		);
 
 		InvView = InvView.GetInverse();
-		
+
 		cursorGO.pos = InvProj * cursorGO.pos;
 		cursorGO.pos = InvView * cursorGO.pos;
 		cursorGO.pos += camera.position;
 	}
 
+	bool SkipKBXDirInput = false;
+	bool SkipKBYDirInput = false;
+
+	// poll controller first
+	if (present == 1)
+	{
+		int axesCount;
+		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+
+		float temp = (float)RoundOff((double)axes[0], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			SkipKBXDirInput = true;
+			player->MoveX_Pad(temp, dt);
+			if (doNotPollMouse)
+				cursorGO.pos += player->GO->vel * 0.5f * (float)dt;
+		}
+		temp = (float)RoundOff((double)axes[1], 1);
+		if (temp > 0.0f || temp < 0.0f)
+		{
+			SkipKBYDirInput = true;
+			player->MoveY_Pad(axes[1], dt);
+			if (doNotPollMouse)
+				cursorGO.pos += player->GO->vel * 0.5f * (float)dt;
+		}
+	}
+	//then poll kb
+	if (!SkipKBYDirInput)
+	{
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
+			player->MoveY_KB(1, dt);
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
+			player->MoveY_KB(0, dt);
+	}
+	if (!SkipKBXDirInput)
+	{
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
+			player->MoveX_KB(1, dt);
+		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
+			player->MoveX_KB(0, dt);
+	}
+
+	
+
 	static bool bLButtonState = false;
 	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = true;
+
+		projectile.GO->pos = player->GO->pos;
+		projectile.GO->vel = ((cursorGO.pos - player->GO->pos).Normalized() * player->yeetSpeed);
+		projectile.GO->vel.z = 0;
+		projectile.targetArea = cursorGO.pos;
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
@@ -243,18 +253,31 @@ void SceneGame::Update(double dt)
 
 	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
 	{
-		GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * dt;
-
-		if (GOMan.GOIsHookedOnByClass(i, Player))
+		if (GOMan.GOContainer[i]->active)
 		{
-			p.cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
-			p.cameraAttachment->target = GOMan.GOContainer[i]->pos;
-		}
+			GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * (float)dt;
 
-		if (!GOMan.GOContainer[i]->vel.IsZero())
-		{
-			vec3 friction = (0.0075f * GOMan.GOContainer[i]->mass * vec3(0, -9.8, 0)).Length() * GOMan.GOContainer[i]->vel.Normalized();
-			GOMan.GOContainer[i]->vel -= friction;
+			if (GOMan.GOIsHookedOnByClass(i, Player))
+			{
+				player->cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
+				player->cameraAttachment->target = GOMan.GOContainer[i]->pos;
+			}
+
+			if (GOMan.GOIsHookedOnByClass(i, Projectile))
+			{
+
+			}
+
+			if (GOMan.GOIsHookedOnByClass(i, Enemy))
+			{
+
+			}
+
+			if (!GOMan.GOContainer[i]->vel.IsZero() && !GOMan.GOIsHookedOnByClass(i, Projectile))
+			{
+				vec3 friction = (0.0075f * GOMan.GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan.GOContainer[i]->vel.Normalized();
+				GOMan.GOContainer[i]->vel -= friction;
+			}
 		}
 	}
 }
@@ -276,12 +299,10 @@ void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
 		Mtx44 characterSpacing;
 		characterSpacing.SetToTranslation(i * 1.0f, 0, 0); //1.0f is the spacing of each character, you may change this value
 		Mtx44 MVP = projectionStack.Top() * viewStack.Top() * modelStack.Top() * characterSpacing;
-		//glUniformMatrix4fv(m_parameters[U_MVP], 1, GL_FALSE, &MVP.a[0]);
 		defaultShader.SetMat4("MVP", MVP);
 		mesh->Render((unsigned)text[i] * 6, 6);
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//glUniform1i(m_parameters[U_TEXT_ENABLED], 0);
 	defaultShader.SetBool("textEnabled", false);
 }
 
@@ -332,13 +353,22 @@ void SceneGame::Render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Mtx44 projection;
+	//projection.SetToOrtho(
+	//	-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+	//	 (float)Application::GetInstance().GetWindowWidth() / 2 / 10,
+	//	-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
+	//	 (float)Application::GetInstance().GetWindowHeight() / 2 / 10,
+	//	-10, 
+	//	 10);
+
 	projection.SetToOrtho(
-		-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-		 (float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-		-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-		 (float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-		-10, 
-		 10);
+		-40,
+		 40,
+		-40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(),
+		 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(),
+		-10,
+		 10
+	);
 	projectionStack.LoadMatrix(projection);
 	
 	viewStack.LoadIdentity();
@@ -352,8 +382,8 @@ void SceneGame::Render()
 	RenderMesh(meshList[GEO_AXES], false);
 	
 	modelStack.PushMatrix();
-		modelStack.Translate(p.GO->pos.x, p.GO->pos.y, p.GO->pos.z);
-		meshList[GEO_QUAD]->textureID = p.GO->textureID;
+		modelStack.Translate(player->GO->pos.x, player->GO->pos.y, player->GO->pos.z);
+		meshList[GEO_QUAD]->textureID = player->GO->textureID;
 		RenderMesh(meshList[GEO_QUAD], false);
 		meshList[GEO_QUAD]->textureID = 0;
 	modelStack.PopMatrix();
@@ -369,12 +399,15 @@ void SceneGame::Render()
 	modelStack.PushMatrix();
 		modelStack.Translate(cursorGO.pos.x, cursorGO.pos.y, 0);
 		meshList[GEO_QUAD]->textureID = cursorGO.textureID;
-		modelStack.Scale(5, 5, 5);
+		modelStack.Scale(3.5f, 3.5f, 3.5f);
 		RenderMesh(meshList[GEO_QUAD], false);
 		meshList[GEO_QUAD]->textureID = 0;
 	modelStack.PopMatrix();
 
-
+	modelStack.PushMatrix();
+		modelStack.Translate(projectile.GO->pos.x, projectile.GO->pos.y, projectile.GO->pos.z);
+		RenderMesh(meshList[GEO_QUAD], false);
+	modelStack.PopMatrix();
 
 	//=============
 	//     UI
@@ -385,16 +418,13 @@ void SceneGame::Render()
 	std::setprecision(6);
 
 	std::stringstream playerPos;
-	playerPos << std::setprecision(2) << p.GO->pos;
+	playerPos << std::setprecision(2) << player->GO->pos;
 	std::setprecision(6);
 
 	viewStack.LoadIdentity();
 	// Top Left
 	modelStack.PushMatrix();
-		modelStack.Translate(-(float)Application::GetInstance().GetWindowWidth() / 2 / 10, (float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
-		//modelStack.PushMatrix();
-		//	RenderMesh(meshList[GEO_QUAD], false);
-		//modelStack.PopMatrix();
+		modelStack.Translate(-40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
 		modelStack.PushMatrix();
 			modelStack.Translate(2, -2, 0);
 			modelStack.Scale(2, 2, 2);
@@ -404,7 +434,7 @@ void SceneGame::Render()
 
 	// Top Right
 	modelStack.PushMatrix();
-		modelStack.Translate((float)Application::GetInstance().GetWindowWidth() / 2 / 10, (float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
+		modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -412,7 +442,7 @@ void SceneGame::Render()
 
 	// Bot Right
 	modelStack.PushMatrix();
-		modelStack.Translate((float)Application::GetInstance().GetWindowWidth() / 2 / 10, -(float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
+		modelStack.Translate(40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -420,7 +450,7 @@ void SceneGame::Render()
 
 	// Bot Left
 	modelStack.PushMatrix();
-		modelStack.Translate(-(float)Application::GetInstance().GetWindowWidth() / 2 / 10, -(float)Application::GetInstance().GetWindowHeight() / 2 / 10, 0);
+		modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -433,6 +463,11 @@ void SceneGame::Render()
 			modelStack.Translate(0, 5, 0);
 			modelStack.Scale(2, 2, 2);
 			RenderText(meshList[GEO_TEXT], playerPos.str(), { 1, 0, 1 });
+		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(-5, 2.5f, 0);
+			modelStack.Scale(10, 1, 1);
+			RenderMesh(meshList[GEO_BAR], false);
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 
@@ -452,7 +487,7 @@ void SceneGame::Exit()
 	//Cleanup GameObjects
 	while(m_goList.size() > 0)
 	{
-		GameObject *go = m_goList.back();
+		Entity *go = m_goList.back();
 		delete go;
 		m_goList.pop_back();
 	}

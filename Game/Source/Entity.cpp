@@ -24,7 +24,13 @@ void Entity::CheckStatuses()
 	}
 }
 
-void Entity::ApplyStatusEffect(Damage dmg, double duration)
+void Entity::AddStatusEffect(Damage dmg, double duration)
 {
 
 }
+
+void Entity::TakeDamage(Damage dmg)
+{
+	health -= dmg.Total() - resistance.Total();
+}
+

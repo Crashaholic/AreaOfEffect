@@ -48,6 +48,26 @@ void GameUserSettings::LoadSettings(std::string location)
 			MOVE_RIGHT = std::stoul(line.substr(line.find('=') + 1));
 			continue;
 		}
+		if (line.find("cursorSensX") != std::string::npos)
+		{
+			cursorSensX = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("cursorSensY") != std::string::npos)
+		{
+			cursorSensY = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("cursorInvX") != std::string::npos)
+		{
+			cursorInvX = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("cursorInvY") != std::string::npos)
+		{
+			cursorInvY = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
 	}
 
 }

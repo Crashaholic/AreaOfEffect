@@ -13,6 +13,8 @@ struct Player : public Entity
 {
 	Player() {}
 
+	float yeetSpeed;
+
 	virtual void Init(GameObject* go);
 	void InitCam(Camera* cam);
 	std::vector<Spell> CurrentHand;

@@ -24,6 +24,8 @@ public:
 
 	GameUserSettings usrsttngs;
 
+	bool windowHasFocus;
+
 private:
 	Application();
 	~Application();

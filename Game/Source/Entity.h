@@ -18,12 +18,14 @@ struct Entity
 	std::vector<StatusEffect> Statuses;
 	virtual void Init(GameObject* go) = 0;
 	virtual void Update(double dt);
-	void CheckStatuses();
-	void ApplyStatusEffect(Damage dmg, double duration);
-
 	virtual void Render() = 0;
+	void CheckStatuses();
+	void AddStatusEffect(Damage dmg, double duration);
 
-	int health;
+	void TakeDamage(Damage dmg);
+
+
+	float health;
 	float speed;
 	float maxSpeed;
 

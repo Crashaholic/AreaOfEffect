@@ -12,6 +12,8 @@
 #include <vector>
 #include "Player.h"
 #include "GOManager.h"
+#include "Projectile.h"
+#include "Enemy.h"
 
 class SceneGame : public Scene
 {
@@ -21,6 +23,7 @@ class SceneGame : public Scene
 		GEO_TEXT,
 		GEO_BALL,
 		GEO_QUAD,
+		GEO_BAR,
 		NUM_GEOMETRY,
 	};
 public:
@@ -48,15 +51,18 @@ private:
 	Light lights[1];
 
 	bool bLightEnabled;
-
 	float fps;
 
 	GameObject cursorGO;
 
-	Player p;
+	//Player p;
+	Player* player;
 	vec3 clickpos;
+	Projectile projectile;
+	std::vector<Projectile*> projectileList;
+
 	//Physics
-	std::vector<GameObject *> m_goList;
+	std::vector<Entity*> m_goList;
 	float m_speed;
 	float m_worldWidth;
 	float m_worldHeight;

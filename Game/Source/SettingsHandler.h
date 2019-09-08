@@ -13,6 +13,11 @@ struct GameUserSettings
 	unsigned int MOVE_LEFT;
 	unsigned int MOVE_RIGHT;
 
+	unsigned int cursorSensX;
+	unsigned int cursorSensY;
+	unsigned int cursorInvX;
+	unsigned int cursorInvY;
+
 	void LoadSettings(std::string location);
 
 	template <typename NewValue, typename VariableName>

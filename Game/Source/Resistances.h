@@ -4,11 +4,11 @@ struct Resistances
 	Resistances();
 	~Resistances();
 
+	float Total();
+
 	float Phys;
 	float Fire;
 	float Cold;
-	float Earth;
 	float Light;
-	float Right;
 };
 
