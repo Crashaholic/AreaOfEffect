@@ -14,7 +14,3 @@ void Enemy::Init(GameObject* go)
 void Enemy::Update(double dt)
 {
 }
-
-void Enemy::Render()
-{
-}

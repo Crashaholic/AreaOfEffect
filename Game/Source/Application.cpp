@@ -12,6 +12,7 @@ const unsigned char FPS = 60; // FPS of this game
 const unsigned int frameTime = 1000 / FPS; // time for each frame
 int m_width, m_height;
 
+
 //Define an error callback
 static void error_callback(int error, const char* description)
 {
@@ -38,14 +39,20 @@ bool Application::IsKeyPressed(unsigned short key)
 {
 	if (glfwGetWindowAttrib(m_window, GLFW_FOCUSED))
 		return ((GetAsyncKeyState(key) & 0x8001) != 0);
+	return NULL;
 }
 bool Application::IsMousePressed(unsigned short key) //0 - Left, 1 - Right, 2 - Middle
 {
-	return glfwGetMouseButton(m_window, key) != 0;
+	if (glfwGetWindowAttrib(m_window, GLFW_FOCUSED))
+		return glfwGetMouseButton(m_window, key) != 0;
+	return NULL;
 }
 void Application::GetCursorPos(double *xpos, double *ypos)
 {
-	glfwGetCursorPos(m_window, xpos, ypos);
+	if (glfwGetWindowAttrib(m_window, GLFW_FOCUSED))
+		glfwGetCursorPos(m_window, xpos, ypos);
+	else
+		xpos = 0; ypos = 0;
 }
 int Application::GetWindowWidth()
 {
@@ -119,12 +126,18 @@ void Application::Init()
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		//return -1;
 	}
+
+#ifdef _DEBUG
+	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+#else
+	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+#endif
 }
 
 void Application::Run()
 {
 	//Main Loop
-	Scene *scene = new SceneGame();
+	std::unique_ptr<Scene> scene = std::make_unique<SceneGame>();
 	scene->Init();
 
 	m_timer.startTimer();    // Start timer to calculate how long it takes to render this frame
@@ -140,7 +153,6 @@ void Application::Run()
 
 	} //Check if the ESC key had been pressed or if the window had been closed
 	scene->Exit();
-	delete scene;
 }
 
 void Application::Exit()

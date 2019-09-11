@@ -24,6 +24,4 @@ struct Player : public Entity
 
 	void MoveX_Pad(float axis, double dt);
 	void MoveY_Pad(float axis, double dt);
-
-	virtual void Render() override {};
 };

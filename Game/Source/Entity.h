@@ -4,6 +4,7 @@
 
 #include "StatusEffect.h"
 #include "Resistances.h"
+#include "SpriteAnimation.h"
 
 struct Entity
 {
@@ -18,12 +19,13 @@ struct Entity
 	std::vector<StatusEffect> Statuses;
 	virtual void Init(GameObject* go) = 0;
 	virtual void Update(double dt);
-	virtual void Render() = 0;
 	void CheckStatuses();
 	void AddStatusEffect(Damage dmg, double duration);
 
 	void TakeDamage(Damage dmg);
 
+	std::map<std::string, GLuint> textures;
+	std::map<std::string, SpriteAnimation> anims;
 
 	float health;
 	float speed;

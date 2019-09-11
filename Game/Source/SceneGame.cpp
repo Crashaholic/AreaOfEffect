@@ -3,6 +3,15 @@
 #include "Application.h"
 #include <iomanip>
 
+template< typename T >
+struct delete_pointer_element
+{
+	void operator()(T element) const
+	{
+		delete element;
+	}
+};
+
 SceneGame::SceneGame()
 {
 }
@@ -30,6 +39,8 @@ void SceneGame::Init()
 	m_worldHeight = 100.f;
 	m_worldWidth = 100.f;
 	
+	GOMan = new GOManager;
+
 	defaultShader.Init("Shader//comg.vertexshader", "Shader//comg.fragmentshader");
 	defaultShader.Use();
 
@@ -64,6 +75,7 @@ void SceneGame::Init()
 	{
 		meshList[i] = NULL;
 	}
+
 	meshList[GEO_AXES] = MeshBuilder::GenerateAxes("reference", 1000, 1000, 1000);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
 	meshList[GEO_BAR] = MeshBuilder::GenerateBar("quad", Color(1, 1, 1), 1);
@@ -71,19 +83,23 @@ void SceneGame::Init()
 	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
-	cursorGO.textureID = LoadTGA("Image//cursor.tga");
+
+	textures[TEXTURE_LIST::CURSOR_NORMAL] = Load::TGA("Image//cursor.tga");
+	textures[TEXTURE_LIST::CURSOR_CLICKED] = Load::TGA("Image//cursor_clicked.tga");
+
+	cursorGO = new GameObject();
+	cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_NORMAL];
 
 	bLightEnabled = false;
 
 	m_speed = 1.f;
 
 	player = new Player();
-	player->Init(GOMan.FetchGO());
+	player->Init(GOMan->FetchGO());
 	player->InitCam(&camera);
 	player->GO->mass = 10;
-	m_goList.push_back(player);
-
-	projectile.Init(GOMan.FetchGO());
+	player->GO->scale = 3;
+	//m_goList.push_back(player);
 
 	Math::InitRNG();
 }
@@ -134,14 +150,14 @@ void SceneGame::Update(double dt)
 		if (temp > 0.0f || temp < 0.0f)
 		{
 			if (Application::GetInstance().usrsttngs.cursorInvX) temp = -temp;
-			cursorGO.pos.x += (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensX;
+			cursorGO->pos.x += (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensX;
 			doNotPollMouse = true;
 		}
 		temp = (float)RoundOff((double)axes[3], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
 			if (Application::GetInstance().usrsttngs.cursorInvY) temp = -temp;
-			cursorGO.pos.y -= (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensY;
+			cursorGO->pos.y -= (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensY;
 			doNotPollMouse = true;
 		}
 	}
@@ -160,7 +176,7 @@ void SceneGame::Update(double dt)
 		float x = (2.0f * (float)a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
 		float y = 1.0f - (2.0f * (float)b) / (float)Application::GetInstance().GetWindowHeight();
 		float z = 1.0f;
-		cursorGO.pos = vec3(x, y, z);
+		cursorGO->pos = vec3(x, y, z);
 
 		mat4 InvProj, InvView;
 		InvProj = projectionStack.Top();
@@ -174,9 +190,9 @@ void SceneGame::Update(double dt)
 
 		InvView = InvView.GetInverse();
 
-		cursorGO.pos = InvProj * cursorGO.pos;
-		cursorGO.pos = InvView * cursorGO.pos;
-		cursorGO.pos += camera.position;
+		cursorGO->pos = InvProj * cursorGO->pos;
+		cursorGO->pos = InvView * cursorGO->pos;
+		cursorGO->pos += camera.position;
 	}
 
 	bool SkipKBXDirInput = false;
@@ -194,7 +210,7 @@ void SceneGame::Update(double dt)
 			SkipKBXDirInput = true;
 			player->MoveX_Pad(temp, dt);
 			if (doNotPollMouse)
-				cursorGO.pos += player->GO->vel * 0.5f * (float)dt;
+				cursorGO->pos += player->GO->vel * 0.5f * (float)dt;
 		}
 		temp = (float)RoundOff((double)axes[1], 1);
 		if (temp > 0.0f || temp < 0.0f)
@@ -202,7 +218,7 @@ void SceneGame::Update(double dt)
 			SkipKBYDirInput = true;
 			player->MoveY_Pad(axes[1], dt);
 			if (doNotPollMouse)
-				cursorGO.pos += player->GO->vel * 0.5f * (float)dt;
+				cursorGO->pos += player->GO->vel * 0.5f * (float)dt;
 		}
 	}
 	//then poll kb
@@ -221,21 +237,29 @@ void SceneGame::Update(double dt)
 			player->MoveX_KB(0, dt);
 	}
 
-	
-
 	static bool bLButtonState = false;
 	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = true;
-
-		projectile.GO->pos = player->GO->pos;
-		projectile.GO->vel = ((cursorGO.pos - player->GO->pos).Normalized() * player->yeetSpeed);
-		projectile.GO->vel.z = 0;
-		projectile.targetArea = cursorGO.pos;
+		cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_CLICKED];
+		Projectile* p = new Projectile();
+		p->Init(GOMan->FetchGO());
+		p->GO->pos = player->GO->pos;
+		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
+		p->GO->vel.z = 0;
+		p->GO->scale = 1;
+		p->targetArea.x = cursorGO->pos.x;
+		p->targetArea.y = cursorGO->pos.y;
+		p->spellToCastAtArea.radius = 2;
+		p->spellToCastAtArea.delay = 1;
+		p->spellToCastAtArea.dmg = Damage(10, 0, 0, 0);
+		projectiles.push_back(p);
+		//m_goList.push_back(p);
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = false;
+		cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_NORMAL];
 	}
 	
 	static bool bRButtonState = false;
@@ -251,35 +275,64 @@ void SceneGame::Update(double dt)
 	//Physics Simulation Section
 	fps = (float)(1.f / dt);
 
-	for (size_t i = 0; i < GOMan.GOContainer.size(); i++)
+	for (size_t i = 0; i < projectiles.size(); i++)
 	{
-		if (GOMan.GOContainer[i]->active)
+		std::setprecision(2);
+		if ((projectiles[i]->GO->pos - projectiles[i]->targetArea).Length() < 1.f)
 		{
-			GOMan.GOContainer[i]->pos += GOMan.GOContainer[i]->vel * (float)dt;
+			//std::cout << "in!\n";
+			projectiles[i]->spellToCastAtArea.Init(GOMan->FetchGO());
+			projectiles[i]->GO->active = false;
+			projectiles[i]->spellToCastAtArea.DropAt(projectiles[i]->targetArea);
+			projectiles[i]->GO->vel.SetZero();
+			Spell* spell = new Spell();
+			*spell = projectiles[i]->spellToCastAtArea;
+			spell->timer.StartTimer();
+			spells.push_back(spell);
+			delete projectiles[i];
+			projectiles[i] = nullptr;
+			projectiles.erase(projectiles.begin() + i);
+			--i;
+			//m_goList.push_back(spell);
+		}
+		std::setprecision(6);
+	}
 
-			if (GOMan.GOIsHookedOnByClass(i, Player))
-			{
-				player->cameraAttachment->position = GOMan.GOContainer[i]->pos + vec3(0, 0, 1);
-				player->cameraAttachment->target = GOMan.GOContainer[i]->pos;
-			}
-
-			if (GOMan.GOIsHookedOnByClass(i, Projectile))
-			{
-
-			}
-
-			if (GOMan.GOIsHookedOnByClass(i, Enemy))
-			{
-
-			}
-
-			if (!GOMan.GOContainer[i]->vel.IsZero() && !GOMan.GOIsHookedOnByClass(i, Projectile))
-			{
-				vec3 friction = (0.0075f * GOMan.GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan.GOContainer[i]->vel.Normalized();
-				GOMan.GOContainer[i]->vel -= friction;
-			}
+	for (size_t i = 0; i < spells.size(); ++i)
+	{
+		if (spells[i]->timer.Lap() >= spells[i]->delay)
+		{
+			spells[i]->GO->active = false;
+			delete spells[i];
+			spells[i] = nullptr;
+			spells.erase(spells.begin() + i);
 		}
 	}
+
+	for (size_t i = 0; i < GOMan->GOContainer.size(); i++)
+	{
+		if (!GOMan->GOContainer[i]->active)
+		{
+			//delete GOMan->GOContainer[i];
+			//GOMan->GOContainer.erase(GOMan->GOContainer.begin() + i);
+			//--i;
+			continue;
+		}
+
+		GOMan->GOContainer[i]->pos += GOMan->GOContainer[i]->vel * (float)dt;
+		if (!GOMan->GOContainer[i]->vel.IsZero() && !GOMan->GOIsHookedOnByClass(i, Projectile))
+		{
+			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * dt * 50;
+			//GOMan->GOContainer[i]->vel -= friction;
+			GOMan->GOContainer[i]->vel.x = Math::Clamp(GOMan->GOContainer[i]->vel.x - friction.x, GOMan->GOContainer[i]->vel.x > 0 ? 0 : GOMan->GOContainer[i]->vel.x, GOMan->GOContainer[i]->vel.x < 0 ? 0 : GOMan->GOContainer[i]->vel.x);
+			GOMan->GOContainer[i]->vel.y = Math::Clamp(GOMan->GOContainer[i]->vel.y - friction.y, GOMan->GOContainer[i]->vel.y > 0 ? 0 : GOMan->GOContainer[i]->vel.y, GOMan->GOContainer[i]->vel.y < 0 ? 0 : GOMan->GOContainer[i]->vel.y);
+		}
+	}
+
+	// HACK: THIS IS ASSUMING THAT PLAYER IS ALWAYS THERE
+	player->cameraAttachment->position = player->GO->pos + vec3(0, 0, 1);
+	player->cameraAttachment->target = player->GO->pos;
+
 }
 
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
@@ -373,20 +426,27 @@ void SceneGame::Render()
 	
 	viewStack.LoadIdentity();
 	viewStack.LookAt(
-						camera.position.x, camera.position.y, camera.position.z,
-						camera.target.x, camera.target.y, camera.target.z,
-						camera.up.x, camera.up.y, camera.up.z
-					);
+		camera.position.x, camera.position.y, camera.position.z,
+		camera.target.x, camera.target.y, camera.target.z,
+		camera.up.x, camera.up.y, camera.up.z
+	);
 	modelStack.LoadIdentity();
 	
 	RenderMesh(meshList[GEO_AXES], false);
 	
-	modelStack.PushMatrix();
-		modelStack.Translate(player->GO->pos.x, player->GO->pos.y, player->GO->pos.z);
-		meshList[GEO_QUAD]->textureID = player->GO->textureID;
-		RenderMesh(meshList[GEO_QUAD], false);
-		meshList[GEO_QUAD]->textureID = 0;
-	modelStack.PopMatrix();
+	for (size_t i = 0; i < GOMan->GOContainer.size(); i++)
+	{
+		if (GOMan->GOContainer[i]->active)
+		{
+			modelStack.PushMatrix();
+				modelStack.Translate(GOMan->GOContainer[i]->pos.x, GOMan->GOContainer[i]->pos.y, GOMan->GOContainer[i]->pos.z);
+				modelStack.Scale(GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale);
+				meshList[GEO_QUAD]->textureID = GOMan->GOContainer[i]->textureID;
+				RenderMesh(meshList[GEO_QUAD], false);
+				meshList[GEO_QUAD]->textureID = 0;
+			modelStack.PopMatrix();
+		}
+	}
 
 	modelStack.PushMatrix();
 		modelStack.Translate(m_worldWidth, m_worldHeight, 0);
@@ -397,16 +457,11 @@ void SceneGame::Render()
 	clickedpos << std::setprecision(1) << clickpos;
 	std::setprecision(6);
 	modelStack.PushMatrix();
-		modelStack.Translate(cursorGO.pos.x, cursorGO.pos.y, 0);
-		meshList[GEO_QUAD]->textureID = cursorGO.textureID;
+		modelStack.Translate(cursorGO->pos.x, cursorGO->pos.y, 0);
+		meshList[GEO_QUAD]->textureID = cursorGO->textureID;
 		modelStack.Scale(3.5f, 3.5f, 3.5f);
 		RenderMesh(meshList[GEO_QUAD], false);
 		meshList[GEO_QUAD]->textureID = 0;
-	modelStack.PopMatrix();
-
-	modelStack.PushMatrix();
-		modelStack.Translate(projectile.GO->pos.x, projectile.GO->pos.y, projectile.GO->pos.z);
-		RenderMesh(meshList[GEO_QUAD], false);
 	modelStack.PopMatrix();
 
 	//=============
@@ -460,35 +515,71 @@ void SceneGame::Render()
 	modelStack.PushMatrix();
 		modelStack.Translate(0, 0, 0);
 		modelStack.PushMatrix();
-			modelStack.Translate(0, 5, 0);
-			modelStack.Scale(2, 2, 2);
-			RenderText(meshList[GEO_TEXT], playerPos.str(), { 1, 0, 1 });
-		modelStack.PopMatrix();
-		modelStack.PushMatrix();
-			modelStack.Translate(-5, 2.5f, 0);
+			modelStack.Translate(-5, 3.5f, 0);
 			modelStack.Scale(10, 1, 1);
 			RenderMesh(meshList[GEO_BAR], false);
 		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(6, -5.5f, 0);
+			modelStack.Scale(5, 5, 1);
+			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(0, -5.5f, 0);
+			modelStack.Scale(5, 5, 1);
+			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(-6, -5.5f, 0);
+			modelStack.Scale(5, 5, 1);
+			RenderMesh(meshList[GEO_QUAD], false);
+		modelStack.PopMatrix();
 	modelStack.PopMatrix();
-
-
 }
 
 void SceneGame::Exit()
 {
 	// Cleanup VBO
-	for(int i = 0; i < NUM_GEOMETRY; ++i)
+	for (int i = 0; i < NUM_GEOMETRY; ++i)
 	{
 		if(meshList[i])
 			delete meshList[i];
 	}
 	glDeleteVertexArrays(1, &m_vertexArrayID);
-	
-	//Cleanup GameObjects
-	while(m_goList.size() > 0)
+
+	if (cursorGO)
 	{
-		Entity *go = m_goList.back();
-		delete go;
-		m_goList.pop_back();
+		delete cursorGO;
+		cursorGO = nullptr;
 	}
+
+	if (player)
+	{
+		delete player;
+		player = nullptr;
+	}
+
+	//Cleanup GameObjects
+	while (projectiles.size() > 0)
+	{
+		Projectile* go = projectiles.back();
+		if (go)
+			delete go;
+		projectiles.pop_back();
+	}
+
+	while (spells.size() > 0)
+	{
+		Spell* go = spells.back();
+		if (go)
+			delete go;
+		spells.pop_back();
+	}
+
+	//std::for_each(projectiles.begin(), projectiles.end(), delete_pointer_element<Projectile*>());
+	//std::for_each(spells.begin(), spells.end(), delete_pointer_element<Spell*>());
+
+	delete GOMan;
+	GOMan = nullptr;
+
 }

@@ -3,25 +3,18 @@
 
 GOManager::~GOManager() 
 {
-	for (size_t i = 0; i < GOContainer.size(); ++i)
+	while (GOContainer.size() > 0)
 	{
-		if (GOContainer[i])
-		{
-			if (GOContainer[i]->active)
-			{
-				delete GOContainer[i];
-				GOContainer.erase(GOContainer.begin() + i);
-			}
-		}
+		GameObject* go = GOContainer.back();
+		if (go)
+			delete go;
+		GOContainer.pop_back();
 	}
 }
 
 void GOManager::Init()
 {
-	for (int i = 0; i < 10; i++)
-	{
-		GOContainer.push_back(new GameObject);
-	}
+	GOContainer.push_back(new GameObject);
 }
 
 GameObject* GOManager::FetchGO()
@@ -38,7 +31,8 @@ GameObject* GOManager::FetchGO()
 	{
 		GOContainer.push_back(new GameObject);
 	}
-	return GOContainer.back();
+
+	return FetchGO();
 }
 
 

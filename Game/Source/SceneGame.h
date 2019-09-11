@@ -1,19 +1,17 @@
 #ifndef SCENE_GAME_H
 #define SCENE_GAME_H
 
-#include "Scene.h"
-#include "Mtx44.h"
+#include "gpch.h"
+
 #include "Camera.h"
-#include "Mesh.h"
-#include "MatrixStack.h"
 #include "Light.h"
 #include "GameObject.h"
-#include "shader.hpp"
-#include <vector>
 #include "Player.h"
 #include "GOManager.h"
 #include "Projectile.h"
 #include "Enemy.h"
+
+#include "Scene.h"
 
 class SceneGame : public Scene
 {
@@ -26,6 +24,14 @@ class SceneGame : public Scene
 		GEO_BAR,
 		NUM_GEOMETRY,
 	};
+
+	enum TEXTURE_LIST
+	{
+		CURSOR_NORMAL,
+		CURSOR_CLICKED,
+		TEX_COUNT
+	};
+
 public:
 	SceneGame();
 	~SceneGame();
@@ -39,9 +45,13 @@ public:
 	void RenderMesh(Mesh *mesh, bool enableLight);
 private:
 	unsigned m_vertexArrayID;
+
+	// UI textures
+	GLuint textures[TEX_COUNT];
+
 	Mesh* meshList[NUM_GEOMETRY];
 	Shader defaultShader;
-	GOManager GOMan;
+	GOManager* GOMan;
 	Camera camera;
 
 	MS modelStack;
@@ -53,16 +63,16 @@ private:
 	bool bLightEnabled;
 	float fps;
 
-	GameObject cursorGO;
+	GameObject* cursorGO;
 
-	//Player p;
-	Player* player;
 	vec3 clickpos;
-	Projectile projectile;
-	std::vector<Projectile*> projectileList;
+	Player* player;
+	std::vector<Projectile*> projectiles;
+	std::vector<Spell*> spells;
+	std::vector<Enemy*> enemies;
 
 	//Physics
-	std::vector<Entity*> m_goList;
+	//std::vector<Entity*> m_goList;
 	float m_speed;
 	float m_worldWidth;
 	float m_worldHeight;

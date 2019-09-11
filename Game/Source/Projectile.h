@@ -20,15 +20,5 @@ struct Projectile : public Entity
 
 	virtual void Update(double dt)
 	{
-		if ((GO->pos - targetArea).Length() < 1)
-		{
-			GO->active = false;
-			spellToCastAtArea.DropAt(targetArea);
-		}
-	}
-
-	virtual void Render()
-	{
-
 	}
 };
