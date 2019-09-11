@@ -1,6 +1,8 @@
 #include "gpch.h"
 #include "Entity.h"
 
+#include "DmgResBridge.h"
+
 Entity::~Entity()
 {
 	while (Statuses.size() > 0)
@@ -31,6 +33,6 @@ void Entity::AddStatusEffect(Damage dmg, double duration)
 
 void Entity::TakeDamage(Damage dmg)
 {
-	health -= dmg.Total() - resistance.Total();
+	health -= (dmg - resistance).Total();
 }
 

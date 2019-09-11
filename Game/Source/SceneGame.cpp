@@ -255,11 +255,10 @@ void SceneGame::Update(double dt)
 		p->GO->scale = 1;
 		p->targetArea.x = cursorGO->pos.x;
 		p->targetArea.y = cursorGO->pos.y;
-		p->spellToCastAtArea.radius = 2;
-		p->spellToCastAtArea.delay = 1;
-		p->spellToCastAtArea.dmg = Damage(10, 0, 0, 0);
+		p->spellToCastAtArea.radius = 4;
+		p->spellToCastAtArea.delay = 100000;
+		p->spellToCastAtArea.dmg = Damage(0, 0, 0, 0);
 		projectiles.push_back(p);
-		//m_goList.push_back(p);
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
@@ -285,7 +284,6 @@ void SceneGame::Update(double dt)
 		std::setprecision(2);
 		if ((projectiles[i]->GO->pos - projectiles[i]->targetArea).Length() < 1.f)
 		{
-			//std::cout << "in!\n";
 			projectiles[i]->spellToCastAtArea.Init(GOMan->FetchGO());
 			projectiles[i]->GO->active = false;
 			projectiles[i]->spellToCastAtArea.DropAt(projectiles[i]->targetArea);
@@ -293,18 +291,39 @@ void SceneGame::Update(double dt)
 			Spell* spell = new Spell();
 			*spell = projectiles[i]->spellToCastAtArea;
 			spell->timer.StartTimer();
+			spell->GO->scale = spell->radius * 2;
+			spell->GO->textureID = Load::TGA("Image//range.tga");
 			spells.push_back(spell);
 			delete projectiles[i];
 			projectiles[i] = nullptr;
 			projectiles.erase(projectiles.begin() + i);
 			--i;
-			//m_goList.push_back(spell);
 		}
 		std::setprecision(6);
 	}
 
+	static bool increment = true;
+
 	for (size_t i = 0; i < spells.size(); ++i)
 	{
+		std::cout << spells[i]->radius;
+		//if (increment)
+		//{
+		//	spells[i]->radius++;
+		//	spells[i]->GO->scale++;
+		//}
+		//else
+		//{
+		//	spells[i]->radius--;
+		//	spells[i]->GO->scale--;
+		//}
+		//if (spells[i]->radius == 20)
+		//	increment = false;
+		//else if (spells[i]->radius == 0)
+		//	increment = true;
+
+		spells[i]->DamageNearby(player);
+
 		if (spells[i]->timer.Lap() >= spells[i]->delay)
 		{
 			spells[i]->GO->active = false;
@@ -327,8 +346,8 @@ void SceneGame::Update(double dt)
 		GOMan->GOContainer[i]->pos += GOMan->GOContainer[i]->vel * (float)dt;
 		if (!GOMan->GOContainer[i]->vel.IsZero() && !GOMan->GOIsHookedOnByClass(i, Projectile))
 		{
-			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * dt * 50;
-			//GOMan->GOContainer[i]->vel -= friction;
+			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * dt * 100;
+
 			GOMan->GOContainer[i]->vel.x = Math::Clamp(GOMan->GOContainer[i]->vel.x - friction.x, GOMan->GOContainer[i]->vel.x > 0 ? 0 : GOMan->GOContainer[i]->vel.x, GOMan->GOContainer[i]->vel.x < 0 ? 0 : GOMan->GOContainer[i]->vel.x);
 			GOMan->GOContainer[i]->vel.y = Math::Clamp(GOMan->GOContainer[i]->vel.y - friction.y, GOMan->GOContainer[i]->vel.y > 0 ? 0 : GOMan->GOContainer[i]->vel.y, GOMan->GOContainer[i]->vel.y < 0 ? 0 : GOMan->GOContainer[i]->vel.y);
 		}
@@ -411,13 +430,6 @@ void SceneGame::Render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Mtx44 projection;
-	//projection.SetToOrtho(
-	//	-(float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-	//	 (float)Application::GetInstance().GetWindowWidth() / 2 / 10,
-	//	-(float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-	//	 (float)Application::GetInstance().GetWindowHeight() / 2 / 10,
-	//	-10, 
-	//	 10);
 
 	projection.SetToOrtho(
 		-40,
@@ -446,6 +458,7 @@ void SceneGame::Render()
 			modelStack.PushMatrix();
 				modelStack.Translate(GOMan->GOContainer[i]->pos.x, GOMan->GOContainer[i]->pos.y, GOMan->GOContainer[i]->pos.z);
 				modelStack.Scale(GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale);
+				//modelStack.Scale(8, 8, 1);
 				meshList[GEO_QUAD]->textureID = GOMan->GOContainer[i]->textureID;
 				RenderMesh(meshList[GEO_QUAD], false);
 				meshList[GEO_QUAD]->textureID = 0;
@@ -462,7 +475,7 @@ void SceneGame::Render()
 	clickedpos << std::setprecision(1) << clickpos;
 	std::setprecision(6);
 	modelStack.PushMatrix();
-		modelStack.Translate(cursorGO->pos.x, cursorGO->pos.y, 0);
+		modelStack.Translate(cursorGO->pos.x, cursorGO->pos.y, 9);
 		meshList[GEO_QUAD]->textureID = cursorGO->textureID;
 		modelStack.Scale(3.5f, 3.5f, 3.5f);
 		RenderMesh(meshList[GEO_QUAD], false);
@@ -517,49 +530,50 @@ void SceneGame::Render()
 	modelStack.PopMatrix();
 
 	// Mid
-	modelStack.PushMatrix();
+	modelStack.PushMatrix();	
 		modelStack.Translate(0, 0, 0);
 		// LIFE BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
-			modelStack.Scale(10, 2, 1);
+			// HACK: HEALTH AS SCALE.X VALUE
+			modelStack.Scale(((player->health - 0) / (20 - 0)) * 10, 1.5f, 1);
 			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::LIFE_BAR_FILL];
 			RenderMesh(meshList[GEO_BAR], false);
 			meshList[GEO_BAR]->textureID = 0;
 		modelStack.PopMatrix();
-		modelStack.PushMatrix();
-			modelStack.Translate(-6.f, 3.5f, 0);
-			modelStack.Scale(2, 2, 1);
-			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT];
-			RenderMesh(meshList[GEO_QUAD], false);
-			meshList[GEO_QUAD]->textureID = 0;
-		modelStack.PopMatrix();
-		modelStack.PushMatrix();
-			modelStack.Translate(6.f, 3.5f, 0);
-			modelStack.Scale(2, 2, 1);
-			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT];
-			RenderMesh(meshList[GEO_QUAD], false);
-			meshList[GEO_QUAD]->textureID = 0;
-		modelStack.PopMatrix();
+		//modelStack.PushMatrix();
+		//	modelStack.Translate(-6.f, 3.5f, 1);
+		//	modelStack.Scale(2, 2, 1);
+		//	meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL];
+		//	RenderMesh(meshList[GEO_QUAD], false);
+		//	meshList[GEO_QUAD]->textureID = 0;
+		//modelStack.PopMatrix();
+		//modelStack.PushMatrix();
+		//	modelStack.Translate(6.f, 3.5f, 1);
+		//	modelStack.Scale(2, 2, 1);
+		//	meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL];
+		//	RenderMesh(meshList[GEO_QUAD], false);
+		//	meshList[GEO_QUAD]->textureID = 0;
+		//modelStack.PopMatrix();
 
 
 
-		// CARD BAR
-		modelStack.PushMatrix();
-			modelStack.Translate(6, -5.5f, 0);
-			modelStack.Scale(5, 5, 1);
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
-		modelStack.PushMatrix();
-			modelStack.Translate(0, -5.5f, 0);
-			modelStack.Scale(5, 5, 1);
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
-		modelStack.PushMatrix();
-			modelStack.Translate(-6, -5.5f, 0);
-			modelStack.Scale(5, 5, 1);
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
+	//	// CARD BAR
+	//	modelStack.PushMatrix();
+	//		modelStack.Translate(6, -5.5f, 0);
+	//		modelStack.Scale(5, 5, 1);
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//	modelStack.PushMatrix();
+	//		modelStack.Translate(0, -5.5f, 0);
+	//		modelStack.Scale(5, 5, 1);
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//	modelStack.PushMatrix();
+	//		modelStack.Translate(-6, -5.5f, 0);
+	//		modelStack.Scale(5, 5, 1);
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
 	modelStack.PopMatrix();
 }
 

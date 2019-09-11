@@ -14,8 +14,8 @@ struct Spell : public Entity
 	Timer timer;
 
 	void DropAt(vec3 position);
+	void DamageNearby(Entity* ent);
 	virtual void Init(GameObject* go);
 	virtual void Update(double dt);
-	virtual void Render();
 };
 

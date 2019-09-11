@@ -53,6 +53,7 @@
     <ClInclude Include="Source\Deck.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Damage.h" />
+    <ClInclude Include="Source\DmgResBridge.h" />
     <ClInclude Include="Source\Enemy.h" />
     <ClInclude Include="Source\Entity.h" />
     <ClInclude Include="Source\GameObject.h" />

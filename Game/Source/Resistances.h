@@ -2,6 +2,7 @@
 struct Resistances
 {
 	Resistances();
+	Resistances(float, float, float, float);
 	~Resistances();
 
 	float Total();

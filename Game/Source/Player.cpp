@@ -9,6 +9,7 @@ void Player::Init(GameObject * go)
 	maxSpeed = 20;
 	health = 20;
 	yeetSpeed = 50;
+	resistance = Resistances( 0.f, 0.f, 0.f, 0.f );
 }
 
 void Player::InitCam(Camera * cam)
