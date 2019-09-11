@@ -84,8 +84,13 @@ void SceneGame::Init()
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
 
-	textures[TEXTURE_LIST::CURSOR_NORMAL] = Load::TGA("Image//cursor.tga");
-	textures[TEXTURE_LIST::CURSOR_CLICKED] = Load::TGA("Image//cursor_clicked.tga");
+	textures[TEXTURE_LIST::CURSOR_NORMAL        ] = Load::TGA("Image//cursor.tga");
+	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
+	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
+	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
+	textures[TEXTURE_LIST::LIFE_BAR_RIGHT       ] = Load::TGA("Image//life_right.tga");
+	textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL ] = Load::TGA("Image//life_left_lion.tga");
+	textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL] = Load::TGA("Image//life_right_wolf.tga");
 
 	cursorGO = new GameObject();
 	cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_NORMAL];
@@ -514,11 +519,32 @@ void SceneGame::Render()
 	// Mid
 	modelStack.PushMatrix();
 		modelStack.Translate(0, 0, 0);
+		// LIFE BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
-			modelStack.Scale(10, 1, 1);
+			modelStack.Scale(10, 2, 1);
+			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::LIFE_BAR_FILL];
 			RenderMesh(meshList[GEO_BAR], false);
+			meshList[GEO_BAR]->textureID = 0;
 		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(-6.f, 3.5f, 0);
+			modelStack.Scale(2, 2, 1);
+			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT];
+			RenderMesh(meshList[GEO_QUAD], false);
+			meshList[GEO_QUAD]->textureID = 0;
+		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(6.f, 3.5f, 0);
+			modelStack.Scale(2, 2, 1);
+			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT];
+			RenderMesh(meshList[GEO_QUAD], false);
+			meshList[GEO_QUAD]->textureID = 0;
+		modelStack.PopMatrix();
+
+
+
+		// CARD BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(6, -5.5f, 0);
 			modelStack.Scale(5, 5, 1);

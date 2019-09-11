@@ -6,7 +6,7 @@ void Player::Init(GameObject * go)
 	GO = go;
 	(GO->hookingClass) = std::type_index(typeid(Player));
 	speed = 100;
-	maxSpeed = 10;
+	maxSpeed = 20;
 	health = 20;
 	yeetSpeed = 50;
 }
