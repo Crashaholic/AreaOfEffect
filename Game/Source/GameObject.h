@@ -14,16 +14,12 @@ struct GameObject
 	bool active;
 	float mass;
 
-	//std::map<std::string, GLuint> textures;
-	//std::map<std::string, SpriteAnimation*> anims;
 	std::map<std::string, Sprite> sprites;
 	std::type_index hookingClass;
 
 	GameObject();
 	~GameObject();
 
-	//GLuint activeTexture;
-	//Mesh* activeMesh;
 	Sprite activeSprite;
 };
 

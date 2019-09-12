@@ -20,7 +20,7 @@ void GameUserSettings::LoadSettings(std::string location)
 		}
 		if (line.find("fullscreen") != std::string::npos)
 		{
-			windowFullscreen = std::stoi(line.substr(line.find('=') + 1));
+			windowFullscreen = std::stoul(line.substr(line.find('=') + 1));
 			continue;
 		}
 		if (line.find("windowed") != std::string::npos)
@@ -66,6 +66,11 @@ void GameUserSettings::LoadSettings(std::string location)
 		if (line.find("cursorInvY") != std::string::npos)
 		{
 			cursorInvY = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("lifebarDecoration") != std::string::npos)
+		{
+			lifebarDecoration = std::stoul(line.substr(line.find('=') + 1));
 			continue;
 		}
 	}

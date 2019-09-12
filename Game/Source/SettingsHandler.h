@@ -18,6 +18,8 @@ struct GameUserSettings
 	unsigned int cursorInvX;
 	unsigned int cursorInvY;
 
+	unsigned int lifebarDecoration;
+
 	void LoadSettings(std::string location);
 
 	template <typename NewValue, typename VariableName>

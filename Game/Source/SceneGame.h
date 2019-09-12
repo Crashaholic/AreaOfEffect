@@ -69,6 +69,9 @@ private:
 	bool bLightEnabled;
 	float fps;
 
+	Sprite BaseProjectile;
+	Sprite BaseSpell;
+
 	GameObject* cursorGO;
 
 	vec3 clickpos;
@@ -77,8 +80,8 @@ private:
 	std::vector<Spell*> spells;
 	std::vector<Enemy*> enemies;
 
-	//Physics
-	//std::vector<Entity*> m_goList;
+	unsigned short selectedCard;
+
 	float m_speed;
 	float m_worldWidth;
 	float m_worldHeight;

@@ -17,7 +17,7 @@ struct Player : public Entity
 
 	virtual void Init(GameObject* go);
 	void InitCam(Camera* cam);
-	std::vector<Spell> CurrentHand;
+	std::vector<Spell> currentHand;
 	Camera* cameraAttachment;
 	void MoveX_KB(bool dirX, double dt); // 0 - left, 1 - right
 	void MoveY_KB(bool dirY, double dt); // 0 - down, 1 - up

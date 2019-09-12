@@ -84,11 +84,6 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL] = Load::TGA("Image//life_right_wolf.tga");
 
 	cursorGO = new GameObject();
-	//cursorGO->anims["QUAD"] = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
-	//cursorGO->textures["NORMAL"] = textures[TEXTURE_LIST::CURSOR_NORMAL];
-	//cursorGO->textures["CLICK"] = textures[TEXTURE_LIST::CURSOR_CLICKED];
-	//cursorGO->activeTexture = cursorGO->textures["NORMAL"];
-	//cursorGO->activeMesh = cursorGO->anims["QUAD"];
 
 	cursorGO->sprites["NORMAL"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
 	cursorGO->sprites["NORMAL"].second = textures[TEXTURE_LIST::CURSOR_NORMAL];
@@ -102,18 +97,38 @@ void SceneGame::Init()
 
 	m_speed = 1.f;
 
+	selectedCard = 1;
+
+	BaseProjectile.first = MeshBuilder::GenerateSpriteAnimation("proj", 1, 4);
+	BaseProjectile.first->m_anim = new Animation();
+	BaseProjectile.first->m_anim->Set(0, 3, 0.25f, true, true);
+	BaseProjectile.second = Load::TGA("Image//projectile.tga");
+
+	BaseSpell.first = MeshBuilder::GenerateSpriteAnimation("spel", 1, 1);
+	BaseSpell.second = Load::TGA("Image//range.tga");
+
 	player = new Player();
 	player->Init(GOMan->FetchGO());
 	player->InitCam(&camera);
 	player->GO->mass = 10;
 	player->GO->scale = 3;
-	//player->GO->textures["IDLE"] = Load::TGA("Image//debug_player.tga");
-	//player->GO->activeTexture = player->GO->textures["IDLE"];
 	
 	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
 	player->GO->sprites["IDLE"].second = Load::TGA("Image//debug_player.tga");
 	
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
+
+	player->maxHealth = 2841.f;
+	player->health = 2841.f;
+
+	Spell temp1;
+	temp1.delay = 0.5f;
+	temp1.radius = 3;
+	temp1.dmg = Damage{0, 200, 0, 0};
+
+	player->resistance.Fire = 0.f;
+
+	player->currentHand.push_back(temp1);
 
 	Math::InitRNG();
 }
@@ -145,8 +160,9 @@ double RoundOff(double N, double n)
 	return j;
 }
 
-void SceneGame::Update(double dt)
+void SceneGame::Update(double dt_raw)
 {
+	double dt = m_speed * dt_raw;
 	//Keyboard Section
 	if(Application::GetInstance().IsKeyPressed('1') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -258,17 +274,15 @@ void SceneGame::Update(double dt)
 		cursorGO->activeSprite = cursorGO->sprites["CLICK"];
 		Projectile* p = new Projectile();
 		p->Init(GOMan->FetchGO());
-		p->GO->sprites["MOVING"].first = MeshBuilder::GenerateSpriteAnimation("PROJECTILE_MOVE", 1, 1);
+		p->GO->sprites["MOVING"] = BaseProjectile;
 		p->GO->activeSprite = p->GO->sprites["MOVING"];
 		p->GO->pos = player->GO->pos;
 		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
 		p->GO->vel.z = 0;
-		p->GO->scale = 1;
+		p->GO->scale = 3;
 		p->targetArea.x = cursorGO->pos.x;
 		p->targetArea.y = cursorGO->pos.y;
-		p->spellToCastAtArea.radius = 4;
-		p->spellToCastAtArea.delay = 0.5f;
-		p->spellToCastAtArea.dmg = Damage(5, 0, 0, 0);
+		p->spellToCastAtArea = player->currentHand[0];
 		projectiles.push_back(p);
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
@@ -292,6 +306,8 @@ void SceneGame::Update(double dt)
 
 	for (size_t i = 0; i < projectiles.size(); i++)
 	{
+		projectiles[i]->GO->activeSprite.first->Update(dt);
+
 		std::setprecision(2);
 		if ((projectiles[i]->GO->pos - projectiles[i]->targetArea).Length() < 1.f)
 		{
@@ -303,8 +319,7 @@ void SceneGame::Update(double dt)
 			*spell = projectiles[i]->spellToCastAtArea;
 			spell->timer.StartTimer();
 			spell->GO->scale = spell->radius * 2.f;
-			spell->GO->sprites["RANGE"].first = MeshBuilder::GenerateSpriteAnimation("Range", 1, 1);
-			spell->GO->sprites["RANGE"].second = Load::TGA("Image//range.tga");
+			spell->GO->sprites["RANGE"] = BaseSpell;
 			spell->GO->activeSprite = spell->GO->sprites["RANGE"];
 			spells.push_back(spell);
 			delete projectiles[i];

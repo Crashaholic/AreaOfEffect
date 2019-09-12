@@ -33,3 +33,10 @@
 
 #include "timer.h"
 #include "shader.hpp"
+
+#include "SoundEngine.h"
+
+#include "CTimer.h"
+#include "Camera.h"
+#include "Damage.h"
+#include "Resistances.h"

@@ -42,6 +42,7 @@
     <ClCompile Include="Source\SceneGame.cpp" />
     <ClCompile Include="Source\SettingsHandler.cpp" />
     <ClCompile Include="Source\shader.cpp" />
+    <ClCompile Include="Source\SoundEngine.cpp" />
     <ClCompile Include="Source\Spell.cpp" />
     <ClCompile Include="Source\Sprite.cpp" />
     <ClCompile Include="Source\SpriteAnimation.cpp" />
@@ -73,6 +74,7 @@
     <ClInclude Include="Source\SceneGame.h" />
     <ClInclude Include="Source\SettingsHandler.h" />
     <ClInclude Include="Source\shader.hpp" />
+    <ClInclude Include="Source\SoundEngine.h" />
     <ClInclude Include="Source\Spell.h" />
     <ClInclude Include="Source\Sprite.h" />
     <ClInclude Include="Source\SpriteAnimation.h" />
@@ -141,13 +143,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Common\Source;$(SolutionDir)\glfw\include;$(SolutionDir)\glew\include;%(AdditionalIncludeDirectories</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)irrklang\include;$(SolutionDir)Common\Source;$(SolutionDir)glfw\include;$(SolutionDir)glew\include;%(AdditionalIncludeDirectories</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)\glew\lib;$(SolutionDir)\glfw\lib-vc2017;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Common.lib;winmm.lib;opengl32.lib;glu32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Configuration);$(SolutionDir)\glew\lib;$(SolutionDir)\glfw\lib-vc2017;$(SolutionDir)\irrklang\lib\Win32-visualStudio;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>irrKlang.lib;Common.lib;winmm.lib;opengl32.lib;glu32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -166,15 +168,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Common\Source;$(SolutionDir)\glfw\include;$(SolutionDir)\glew\include;%(AdditionalIncludeDirectories</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)irrklang\include;$(SolutionDir)Common\Source;$(SolutionDir)glfw\include;$(SolutionDir)glew\include;%(AdditionalIncludeDirectories</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)\glew\lib;$(SolutionDir)\glfw\lib-vc2017;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Common.lib;winmm.lib;opengl32.lib;glu32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Configuration);$(SolutionDir)\glew\lib;$(SolutionDir)\glfw\lib-vc2017;$(SolutionDir)\irrklang\lib\Win32-visualStudio;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>irrKlang.lib;Common.lib;winmm.lib;opengl32.lib;glu32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
