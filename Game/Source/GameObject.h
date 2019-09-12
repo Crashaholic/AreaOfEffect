@@ -3,6 +3,7 @@
 
 #include "Vector3.h"
 #include <typeindex>
+#include "Sprite.h"
 
 struct GameObject
 {
@@ -13,12 +14,17 @@ struct GameObject
 	bool active;
 	float mass;
 
+	//std::map<std::string, GLuint> textures;
+	//std::map<std::string, SpriteAnimation*> anims;
+	std::map<std::string, Sprite> sprites;
 	std::type_index hookingClass;
 
 	GameObject();
 	~GameObject();
 
-	GLuint textureID;
+	//GLuint activeTexture;
+	//Mesh* activeMesh;
+	Sprite activeSprite;
 };
 
 #endif

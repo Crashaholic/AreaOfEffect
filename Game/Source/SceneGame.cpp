@@ -3,15 +3,6 @@
 #include "Application.h"
 #include <iomanip>
 
-template< typename T >
-struct delete_pointer_element
-{
-	void operator()(T element) const
-	{
-		delete element;
-	}
-};
-
 SceneGame::SceneGame()
 {
 }
@@ -93,7 +84,19 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL] = Load::TGA("Image//life_right_wolf.tga");
 
 	cursorGO = new GameObject();
-	cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_NORMAL];
+	//cursorGO->anims["QUAD"] = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+	//cursorGO->textures["NORMAL"] = textures[TEXTURE_LIST::CURSOR_NORMAL];
+	//cursorGO->textures["CLICK"] = textures[TEXTURE_LIST::CURSOR_CLICKED];
+	//cursorGO->activeTexture = cursorGO->textures["NORMAL"];
+	//cursorGO->activeMesh = cursorGO->anims["QUAD"];
+
+	cursorGO->sprites["NORMAL"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+	cursorGO->sprites["NORMAL"].second = textures[TEXTURE_LIST::CURSOR_NORMAL];
+
+	cursorGO->sprites["CLICK"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+	cursorGO->sprites["CLICK"].second = textures[TEXTURE_LIST::CURSOR_CLICKED];
+
+	cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
 
 	bLightEnabled = false;
 
@@ -104,7 +107,13 @@ void SceneGame::Init()
 	player->InitCam(&camera);
 	player->GO->mass = 10;
 	player->GO->scale = 3;
-	//m_goList.push_back(player);
+	//player->GO->textures["IDLE"] = Load::TGA("Image//debug_player.tga");
+	//player->GO->activeTexture = player->GO->textures["IDLE"];
+	
+	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+	player->GO->sprites["IDLE"].second = Load::TGA("Image//debug_player.tga");
+	
+	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
 	Math::InitRNG();
 }
@@ -246,9 +255,11 @@ void SceneGame::Update(double dt)
 	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = true;
-		cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_CLICKED];
+		cursorGO->activeSprite = cursorGO->sprites["CLICK"];
 		Projectile* p = new Projectile();
 		p->Init(GOMan->FetchGO());
+		p->GO->sprites["MOVING"].first = MeshBuilder::GenerateSpriteAnimation("PROJECTILE_MOVE", 1, 1);
+		p->GO->activeSprite = p->GO->sprites["MOVING"];
 		p->GO->pos = player->GO->pos;
 		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
 		p->GO->vel.z = 0;
@@ -256,14 +267,14 @@ void SceneGame::Update(double dt)
 		p->targetArea.x = cursorGO->pos.x;
 		p->targetArea.y = cursorGO->pos.y;
 		p->spellToCastAtArea.radius = 4;
-		p->spellToCastAtArea.delay = 100000;
-		p->spellToCastAtArea.dmg = Damage(0, 0, 0, 0);
+		p->spellToCastAtArea.delay = 0.5f;
+		p->spellToCastAtArea.dmg = Damage(5, 0, 0, 0);
 		projectiles.push_back(p);
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = false;
-		cursorGO->textureID = textures[TEXTURE_LIST::CURSOR_NORMAL];
+		cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
 	}
 	
 	static bool bRButtonState = false;
@@ -291,8 +302,10 @@ void SceneGame::Update(double dt)
 			Spell* spell = new Spell();
 			*spell = projectiles[i]->spellToCastAtArea;
 			spell->timer.StartTimer();
-			spell->GO->scale = spell->radius * 2;
-			spell->GO->textureID = Load::TGA("Image//range.tga");
+			spell->GO->scale = spell->radius * 2.f;
+			spell->GO->sprites["RANGE"].first = MeshBuilder::GenerateSpriteAnimation("Range", 1, 1);
+			spell->GO->sprites["RANGE"].second = Load::TGA("Image//range.tga");
+			spell->GO->activeSprite = spell->GO->sprites["RANGE"];
 			spells.push_back(spell);
 			delete projectiles[i];
 			projectiles[i] = nullptr;
@@ -306,26 +319,10 @@ void SceneGame::Update(double dt)
 
 	for (size_t i = 0; i < spells.size(); ++i)
 	{
-		std::cout << spells[i]->radius;
-		//if (increment)
-		//{
-		//	spells[i]->radius++;
-		//	spells[i]->GO->scale++;
-		//}
-		//else
-		//{
-		//	spells[i]->radius--;
-		//	spells[i]->GO->scale--;
-		//}
-		//if (spells[i]->radius == 20)
-		//	increment = false;
-		//else if (spells[i]->radius == 0)
-		//	increment = true;
-
-		spells[i]->DamageNearby(player);
 
 		if (spells[i]->timer.Lap() >= spells[i]->delay)
 		{
+			spells[i]->DamageNearby(player);
 			spells[i]->GO->active = false;
 			delete spells[i];
 			spells[i] = nullptr;
@@ -337,16 +334,16 @@ void SceneGame::Update(double dt)
 	{
 		if (!GOMan->GOContainer[i]->active)
 		{
-			//delete GOMan->GOContainer[i];
-			//GOMan->GOContainer.erase(GOMan->GOContainer.begin() + i);
-			//--i;
+			delete GOMan->GOContainer[i];
+			GOMan->GOContainer.erase(GOMan->GOContainer.begin() + i);
+			--i;
 			continue;
 		}
 
 		GOMan->GOContainer[i]->pos += GOMan->GOContainer[i]->vel * (float)dt;
 		if (!GOMan->GOContainer[i]->vel.IsZero() && !GOMan->GOIsHookedOnByClass(i, Projectile))
 		{
-			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * dt * 100;
+			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * (float) dt * 100;
 
 			GOMan->GOContainer[i]->vel.x = Math::Clamp(GOMan->GOContainer[i]->vel.x - friction.x, GOMan->GOContainer[i]->vel.x > 0 ? 0 : GOMan->GOContainer[i]->vel.x, GOMan->GOContainer[i]->vel.x < 0 ? 0 : GOMan->GOContainer[i]->vel.x);
 			GOMan->GOContainer[i]->vel.y = Math::Clamp(GOMan->GOContainer[i]->vel.y - friction.y, GOMan->GOContainer[i]->vel.y > 0 ? 0 : GOMan->GOContainer[i]->vel.y, GOMan->GOContainer[i]->vel.y < 0 ? 0 : GOMan->GOContainer[i]->vel.y);
@@ -458,10 +455,9 @@ void SceneGame::Render()
 			modelStack.PushMatrix();
 				modelStack.Translate(GOMan->GOContainer[i]->pos.x, GOMan->GOContainer[i]->pos.y, GOMan->GOContainer[i]->pos.z);
 				modelStack.Scale(GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale);
-				//modelStack.Scale(8, 8, 1);
-				meshList[GEO_QUAD]->textureID = GOMan->GOContainer[i]->textureID;
-				RenderMesh(meshList[GEO_QUAD], false);
-				meshList[GEO_QUAD]->textureID = 0;
+				GOMan->GOContainer[i]->activeSprite.first->textureID = GOMan->GOContainer[i]->activeSprite.second;
+				RenderMesh(GOMan->GOContainer[i]->activeSprite.first, false);
+				GOMan->GOContainer[i]->activeSprite.first->textureID = 0;
 			modelStack.PopMatrix();
 		}
 	}
@@ -471,15 +467,12 @@ void SceneGame::Render()
 		RenderMesh(meshList[GEO_AXES], false);
 	modelStack.PopMatrix();
 
-	std::stringstream clickedpos;
-	clickedpos << std::setprecision(1) << clickpos;
-	std::setprecision(6);
 	modelStack.PushMatrix();
 		modelStack.Translate(cursorGO->pos.x, cursorGO->pos.y, 9);
-		meshList[GEO_QUAD]->textureID = cursorGO->textureID;
 		modelStack.Scale(3.5f, 3.5f, 3.5f);
-		RenderMesh(meshList[GEO_QUAD], false);
-		meshList[GEO_QUAD]->textureID = 0;
+		cursorGO->activeSprite.first->textureID = cursorGO->activeSprite.second;
+		RenderMesh(dynamic_cast<Mesh*>(cursorGO->activeSprite.first), false);
+		cursorGO->activeSprite.first->textureID = 0;
 	modelStack.PopMatrix();
 
 	//=============
@@ -487,7 +480,7 @@ void SceneGame::Render()
 	//=============
 
 	std::stringstream fpsCounter;
-	fpsCounter << "FPS: " << std::setprecision(2) << fps;
+	fpsCounter << (int)fps;
 	std::setprecision(6);
 
 	std::stringstream playerPos;
@@ -536,44 +529,47 @@ void SceneGame::Render()
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
 			// HACK: HEALTH AS SCALE.X VALUE
-			modelStack.Scale(((player->health - 0) / (20 - 0)) * 10, 1.5f, 1);
+			modelStack.Scale(((player->health) / (player->maxHealth)) * 10, 1.5f, 1);
 			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::LIFE_BAR_FILL];
 			RenderMesh(meshList[GEO_BAR], false);
 			meshList[GEO_BAR]->textureID = 0;
 		modelStack.PopMatrix();
-		//modelStack.PushMatrix();
-		//	modelStack.Translate(-6.f, 3.5f, 1);
-		//	modelStack.Scale(2, 2, 1);
-		//	meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL];
-		//	RenderMesh(meshList[GEO_QUAD], false);
-		//	meshList[GEO_QUAD]->textureID = 0;
-		//modelStack.PopMatrix();
-		//modelStack.PushMatrix();
-		//	modelStack.Translate(6.f, 3.5f, 1);
-		//	modelStack.Scale(2, 2, 1);
-		//	meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL];
-		//	RenderMesh(meshList[GEO_QUAD], false);
-		//	meshList[GEO_QUAD]->textureID = 0;
-		//modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(-6.f, 3.5f, 1);
+			modelStack.Scale(2, 2, 1);
+			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL];
+			RenderMesh(meshList[GEO_QUAD], false);
+			meshList[GEO_QUAD]->textureID = 0;
+		modelStack.PopMatrix();
+		modelStack.PushMatrix();
+			modelStack.Translate(6.f, 3.5f, 1);
+			modelStack.Scale(2, 2, 1);
+			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL];
+			RenderMesh(meshList[GEO_QUAD], false);
+			meshList[GEO_QUAD]->textureID = 0;
+		modelStack.PopMatrix();
 
 
 
-	//	// CARD BAR
-	//	modelStack.PushMatrix();
-	//		modelStack.Translate(6, -5.5f, 0);
-	//		modelStack.Scale(5, 5, 1);
-	//		RenderMesh(meshList[GEO_QUAD], false);
-	//	modelStack.PopMatrix();
-	//	modelStack.PushMatrix();
-	//		modelStack.Translate(0, -5.5f, 0);
-	//		modelStack.Scale(5, 5, 1);
-	//		RenderMesh(meshList[GEO_QUAD], false);
-	//	modelStack.PopMatrix();
-	//	modelStack.PushMatrix();
-	//		modelStack.Translate(-6, -5.5f, 0);
-	//		modelStack.Scale(5, 5, 1);
-	//		RenderMesh(meshList[GEO_QUAD], false);
-	//	modelStack.PopMatrix();
+		// CARD BAR
+		modelStack.PushMatrix();
+			modelStack.Translate(0, -7.5f, 0);
+			modelStack.PushMatrix();
+				modelStack.Translate(6, 0, 0);
+				modelStack.Scale(5, 5, 1);
+				RenderMesh(meshList[GEO_QUAD], false);
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(0, 0, 0);
+				modelStack.Scale(5, 5, 1);
+				RenderMesh(meshList[GEO_QUAD], false);
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(-6, 0, 0);
+				modelStack.Scale(5, 5, 1);
+				RenderMesh(meshList[GEO_QUAD], false);
+			modelStack.PopMatrix();
+		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 }
 

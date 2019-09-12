@@ -19,14 +19,13 @@ void Spell::DropAt(vec3 pos)
 
 void Spell::DamageNearby(Entity * ent)
 {
-	auto dist = (ent->GO->pos - this->GO->pos).Length();
-	auto condi = (ent->GO->pos - this->GO->pos).Length() <= radius;
-	//std::cout << dist << " <= " << baseRadius * radius << " ? ";
-	std::cout << ent->GO->pos <<  " - " << this->GO->pos << " (" << dist << ") <= " << radius << " ? ";
+	//auto dist = (ent->GO->pos - this->GO->pos).Length();
+	//auto condi = (ent->GO->pos - this->GO->pos).Length() <= radius;
+	//std::cout << ent->GO->pos <<  " - " << this->GO->pos << " (" << dist << ") <= " << radius << " ? ";
 	if ((ent->GO->pos - this->GO->pos).Length() <= radius)
 	{
 		ent->TakeDamage(dmg);
 	}
 
-	std::cout << std::noboolalpha << condi << "\n";
+	//std::cout << std::noboolalpha << condi << "\n";
 }

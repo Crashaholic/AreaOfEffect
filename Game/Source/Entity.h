@@ -24,10 +24,8 @@ struct Entity
 
 	void TakeDamage(Damage dmg);
 
-	std::map<std::string, GLuint> textures;
-	std::map<std::string, SpriteAnimation> anims;
-
 	float health;
+	float maxHealth;
 	float speed;
 	float maxSpeed;
 

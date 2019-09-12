@@ -43,6 +43,7 @@
     <ClCompile Include="Source\SettingsHandler.cpp" />
     <ClCompile Include="Source\shader.cpp" />
     <ClCompile Include="Source\Spell.cpp" />
+    <ClCompile Include="Source\Sprite.cpp" />
     <ClCompile Include="Source\SpriteAnimation.cpp" />
     <ClCompile Include="Source\StatusEffect.cpp" />
     <ClCompile Include="Source\Utility.cpp" />
@@ -73,6 +74,7 @@
     <ClInclude Include="Source\SettingsHandler.h" />
     <ClInclude Include="Source\shader.hpp" />
     <ClInclude Include="Source\Spell.h" />
+    <ClInclude Include="Source\Sprite.h" />
     <ClInclude Include="Source\SpriteAnimation.h" />
     <ClInclude Include="Source\StatusEffect.h" />
     <ClInclude Include="Source\Utility.h" />

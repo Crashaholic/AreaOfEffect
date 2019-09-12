@@ -8,6 +8,7 @@ void Player::Init(GameObject * go)
 	speed = 100;
 	maxSpeed = 20;
 	health = 20;
+	maxHealth = 20;
 	yeetSpeed = 50;
 	resistance = Resistances( 0.f, 0.f, 0.f, 0.f );
 }
