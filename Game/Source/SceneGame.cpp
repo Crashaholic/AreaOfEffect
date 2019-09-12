@@ -13,7 +13,7 @@ SceneGame::~SceneGame()
 
 void SceneGame::Init()
 {
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); 
 	
@@ -113,8 +113,20 @@ void SceneGame::Init()
 	player->GO->mass = 10;
 	player->GO->scale = 3;
 	
-	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
-	player->GO->sprites["IDLE"].second = Load::TGA("Image//debug_player.tga");
+	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("player_idle", 1, 4);
+	player->GO->sprites["IDLE"].first->m_anim = new Animation();
+	player->GO->sprites["IDLE"].first->m_anim->Set(0, 3, 1.f, true, true);
+	player->GO->sprites["IDLE"].second = Load::TGA("Image//player_idle.tga");
+	
+	player->GO->sprites["MOVE_Y"].first = MeshBuilder::GenerateSpriteAnimation("player_move_y", 1, 4);
+	player->GO->sprites["MOVE_Y"].first->m_anim = new Animation();
+	player->GO->sprites["MOVE_Y"].first->m_anim->Set(0, 3, 0.5f, true, true);
+	player->GO->sprites["MOVE_Y"].second = Load::TGA("Image//player_move_y.tga");
+	
+	player->GO->sprites["MOVE_X_LEFT"].first = MeshBuilder::GenerateSpriteAnimation("player_move_x", 1, 4);
+	player->GO->sprites["MOVE_X_LEFT"].first->m_anim = new Animation();
+	player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 0.5f, true, true);
+	player->GO->sprites["MOVE_X_LEFT"].second = Load::TGA("Image//player_move_x_left.tga");
 	
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
@@ -264,11 +276,49 @@ void SceneGame::Update(double dt_raw)
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
 			player->MoveX_KB(1, dt);
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
-			player->MoveX_KB(0, dt);
+			player->MoveX_KB(0, dt);		
+	}
+
+	player->GO->activeSprite = player->GO->sprites["IDLE"];
+
+	if (player->GO->vel.y > 0)
+		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+	else if (player->GO->vel.y < 0)
+		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+	
+	if (player->GO->vel.x > 0)
+		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+	else if (player->GO->vel.x < 0)
+		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
+
+	if (present == 1)
+	{
+		int count;
+		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
+		if (buttons[7] == GLFW_PRESS)
+		{
+			cursorGO->activeSprite = cursorGO->sprites["CLICK"];
+			Projectile* p = new Projectile();
+			p->Init(GOMan->FetchGO());
+			p->GO->sprites["MOVING"] = BaseProjectile;
+			p->GO->activeSprite = p->GO->sprites["MOVING"];
+			p->GO->pos = player->GO->pos;
+			p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
+			p->GO->vel.z = 0;
+			p->GO->scale = 3;
+			p->targetArea.x = cursorGO->pos.x;
+			p->targetArea.y = cursorGO->pos.y;
+			p->spellToCastAtArea = player->currentHand[0];
+			projectiles.push_back(p);
+		}
+		else
+		{
+			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
+		}
 	}
 
 	static bool bLButtonState = false;
-	if(!bLButtonState && Application::GetInstance().IsMousePressed(0))
+	if (!bLButtonState && Application::GetInstance().IsMousePressed(0))
 	{
 		bLButtonState = true;
 		cursorGO->activeSprite = cursorGO->sprites["CLICK"];
@@ -303,6 +353,8 @@ void SceneGame::Update(double dt_raw)
 
 	//Physics Simulation Section
 	fps = (float)(1.f / dt);
+
+	player->GO->activeSprite.first->Update(dt);
 
 	for (size_t i = 0; i < projectiles.size(); i++)
 	{
@@ -552,14 +604,20 @@ void SceneGame::Render()
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 3.5f, 1);
 			modelStack.Scale(2, 2, 1);
-			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL];
+			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
+				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT];
+			else if (Application::GetInstance().usrsttngs.lifebarDecoration == 1)
+				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT_ANIMAL];
 			RenderMesh(meshList[GEO_QUAD], false);
 			meshList[GEO_QUAD]->textureID = 0;
 		modelStack.PopMatrix();
 		modelStack.PushMatrix();
 			modelStack.Translate(6.f, 3.5f, 1);
 			modelStack.Scale(2, 2, 1);
-			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL];
+			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
+				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT];
+			else if (Application::GetInstance().usrsttngs.lifebarDecoration == 1)
+				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT_ANIMAL];
 			RenderMesh(meshList[GEO_QUAD], false);
 			meshList[GEO_QUAD]->textureID = 0;
 		modelStack.PopMatrix();
