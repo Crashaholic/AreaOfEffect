@@ -140,7 +140,8 @@ void SceneGame::Init()
 	Spell temp1;
 	temp1.delay = 0.5f;
 	temp1.radius = 1;
-	temp1.dmg = Damage{0, 200, 0, 0};
+	temp1.duration = 5;
+	temp1.dmg = Damage{0, 10, 0, 0};
 
 	player->resistance.Fire = 75.f;
 
@@ -449,6 +450,10 @@ void SceneGame::Update(double dt_raw)
 		if (spells[i]->timer.Lap() >= spells[i]->delay)
 		{
 			spells[i]->DamageNearby(player);
+		}
+
+		if (spells[i]->timer.Lap() >= spells[i]->duration + spells[i]->delay)
+		{
 			spells[i]->GO->active = false;
 			delete spells[i];
 			spells[i] = nullptr;

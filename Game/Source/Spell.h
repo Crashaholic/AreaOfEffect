@@ -10,6 +10,7 @@ struct Spell : public Entity
 	unsigned short baseRadius = 2;
 	unsigned short radius;
 	float delay;
+	float duration;
 	Damage dmg;
 	Timer timer;
 
