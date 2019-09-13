@@ -3,6 +3,7 @@
 #include "gpch.h"
 #include "Entity.h"
 #include "Spell.h"
+#include "Deck.h"
 
 #include "Camera.h"
 
@@ -18,6 +19,8 @@ struct Player : public Entity
 	virtual void Init(GameObject* go);
 	void InitCam(Camera* cam);
 	std::vector<Spell> currentHand;
+	Deck currentDeck;
+	Deck originalDeck;
 	Camera* cameraAttachment;
 	void MoveX_KB(bool dirX, double dt); // 0 - left, 1 - right
 	void MoveY_KB(bool dirY, double dt); // 0 - down, 1 - up

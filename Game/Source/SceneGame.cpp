@@ -26,9 +26,10 @@ void SceneGame::Init()
 
 	glGenVertexArrays(1, &m_vertexArrayID);
 	glBindVertexArray(m_vertexArrayID);
+	Math::InitRNG();
 
-	m_worldHeight = 100.f;
-	m_worldWidth = 100.f;
+	m_worldHeight = 20.f;
+	m_worldWidth = 20.f;
 	
 	GOMan = new GOManager;
 
@@ -77,6 +78,8 @@ void SceneGame::Init()
 
 	textures[TEXTURE_LIST::CURSOR_NORMAL        ] = Load::TGA("Image//cursor.tga");
 	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
+	textures[TEXTURE_LIST::CARD_SELECTOR        ] = Load::TGA("Image//selector.tga");
+	textures[TEXTURE_LIST::CARD_BACK            ] = Load::TGA("Image//card_drawn.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT       ] = Load::TGA("Image//life_right.tga");
@@ -97,7 +100,7 @@ void SceneGame::Init()
 
 	m_speed = 1.f;
 
-	selectedCard = 1;
+	selectedCard = 2;
 
 	BaseProjectile.first = MeshBuilder::GenerateSpriteAnimation("proj", 1, 4);
 	BaseProjectile.first->m_anim = new Animation();
@@ -106,6 +109,7 @@ void SceneGame::Init()
 
 	BaseSpell.first = MeshBuilder::GenerateSpriteAnimation("spel", 1, 1);
 	BaseSpell.second = Load::TGA("Image//range.tga");
+	BaseSpell.first->transparency = 0.5f;
 
 	player = new Player();
 	player->Init(GOMan->FetchGO());
@@ -115,18 +119,18 @@ void SceneGame::Init()
 	
 	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("player_idle", 1, 4);
 	player->GO->sprites["IDLE"].first->m_anim = new Animation();
-	player->GO->sprites["IDLE"].first->m_anim->Set(0, 3, 1.f, true, true);
+	player->GO->sprites["IDLE"].first->m_anim->Set(0, 3, 2.f, true, true);
 	player->GO->sprites["IDLE"].second = Load::TGA("Image//player_idle.tga");
 	
-	player->GO->sprites["MOVE_Y"].first = MeshBuilder::GenerateSpriteAnimation("player_move_y", 1, 4);
-	player->GO->sprites["MOVE_Y"].first->m_anim = new Animation();
-	player->GO->sprites["MOVE_Y"].first->m_anim->Set(0, 3, 0.5f, true, true);
-	player->GO->sprites["MOVE_Y"].second = Load::TGA("Image//player_move_y.tga");
-	
-	player->GO->sprites["MOVE_X_LEFT"].first = MeshBuilder::GenerateSpriteAnimation("player_move_x", 1, 4);
+	player->GO->sprites["MOVE_X_LEFT"].first = MeshBuilder::GenerateSpriteAnimation("player_move_x_left", 1, 4);
 	player->GO->sprites["MOVE_X_LEFT"].first->m_anim = new Animation();
 	player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 	player->GO->sprites["MOVE_X_LEFT"].second = Load::TGA("Image//player_move_x_left.tga");
+	
+	player->GO->sprites["MOVE_X_RIGHT"].first = MeshBuilder::GenerateSpriteAnimation("player_move_x_right", 1, 4);
+	player->GO->sprites["MOVE_X_RIGHT"].first->m_anim = new Animation();
+	player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 0.5f, true, true);
+	player->GO->sprites["MOVE_X_RIGHT"].second = Load::TGA("Image//player_move_x_right.tga");
 	
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
@@ -135,14 +139,36 @@ void SceneGame::Init()
 
 	Spell temp1;
 	temp1.delay = 0.5f;
-	temp1.radius = 3;
+	temp1.radius = 1;
 	temp1.dmg = Damage{0, 200, 0, 0};
 
-	player->resistance.Fire = 0.f;
+	player->resistance.Fire = 75.f;
 
-	player->currentHand.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	temp1.radius = 5;
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	temp1.radius = 10;
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
 
-	Math::InitRNG();
+	player->GO->pos = { m_worldWidth / 2.f, m_worldHeight / 2.f, 0 };
+
 }
 
 double RoundOff(double N, double n)
@@ -241,6 +267,7 @@ void SceneGame::Update(double dt_raw)
 	bool SkipKBYDirInput = false;
 
 	// poll controller first
+	float totalMovement = 0.0f;
 	if (present == 1)
 	{
 		int axesCount;
@@ -251,18 +278,24 @@ void SceneGame::Update(double dt_raw)
 		{
 			SkipKBXDirInput = true;
 			player->MoveX_Pad(temp, dt);
-			if (doNotPollMouse)
-				cursorGO->pos += player->GO->vel * 0.5f * (float)dt;
+			player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
+			player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
+			totalMovement += 1.3f - abs(temp);
 		}
 		temp = (float)RoundOff((double)axes[1], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
 			SkipKBYDirInput = true;
-			player->MoveY_Pad(axes[1], dt);
-			if (doNotPollMouse)
-				cursorGO->pos += player->GO->vel * 0.5f * (float)dt;
+			player->MoveY_Pad(temp, dt);
+			player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
+			player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
+			totalMovement += 1.3f - abs(temp);
 		}
 	}
+
+	if (doNotPollMouse)
+		cursorGO->pos += player->GO->vel * (float)dt;
+
 	//then poll kb
 	if (!SkipKBYDirInput)
 	{
@@ -276,43 +309,77 @@ void SceneGame::Update(double dt_raw)
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
 			player->MoveX_KB(1, dt);
 		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
-			player->MoveX_KB(0, dt);		
+			player->MoveX_KB(0, dt);
+	}
+
+	if (!SkipKBXDirInput && !SkipKBYDirInput)
+	{
+		player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 0.5f, true, true);
+		player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 	}
 
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
+	std::cout << player->GO->sprites["MOVE_X_LEFT"].first->m_anim->animTime << ',';
+	std::cout << player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->animTime << '\n';
 	if (player->GO->vel.y > 0)
-		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
 	else if (player->GO->vel.y < 0)
-		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+		player->GO->activeSprite = player->GO->sprites["MOVE_X_RIGHT"];
 	
 	if (player->GO->vel.x > 0)
-		player->GO->activeSprite = player->GO->sprites["MOVE_Y"];
+		player->GO->activeSprite = player->GO->sprites["MOVE_X_RIGHT"];
 	else if (player->GO->vel.x < 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
+
+	if (Application::GetInstance().scrollState == 1)
+	{
+		SelectCard(1);
+	}
+	else if (Application::GetInstance().scrollState == -1)
+	{
+		SelectCard(0);
+	}
+
 
 	if (present == 1)
 	{
 		int count;
 		const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
-		if (buttons[7] == GLFW_PRESS)
+		static bool RTPressed = false;
+		if (!RTPressed && buttons[7] == GLFW_PRESS)
 		{
+			RTPressed = true;
 			cursorGO->activeSprite = cursorGO->sprites["CLICK"];
-			Projectile* p = new Projectile();
-			p->Init(GOMan->FetchGO());
-			p->GO->sprites["MOVING"] = BaseProjectile;
-			p->GO->activeSprite = p->GO->sprites["MOVING"];
-			p->GO->pos = player->GO->pos;
-			p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
-			p->GO->vel.z = 0;
-			p->GO->scale = 3;
-			p->targetArea.x = cursorGO->pos.x;
-			p->targetArea.y = cursorGO->pos.y;
-			p->spellToCastAtArea = player->currentHand[0];
-			projectiles.push_back(p);
+			FireCard();
 		}
-		else
+		else if (RTPressed && buttons[7] == GLFW_RELEASE)
 		{
+			RTPressed = false;
+			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
+		}
+
+		static bool LBPressed = false;
+		if (!LBPressed && buttons[4] == GLFW_PRESS)
+		{
+			LBPressed = true;
+			SelectCard(1);
+		}
+		else if (LBPressed && buttons[4] == GLFW_RELEASE)
+		{
+			LBPressed = false;
+			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
+		}
+
+		static bool RBPressed = false;
+		if (!RBPressed && buttons[5] == GLFW_PRESS)
+		{
+			RBPressed = true;
+			SelectCard(0);
+		}
+		else if (RBPressed && buttons[5] == GLFW_RELEASE)
+		{
+			RBPressed = false;
 			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
 		}
 	}
@@ -322,18 +389,7 @@ void SceneGame::Update(double dt_raw)
 	{
 		bLButtonState = true;
 		cursorGO->activeSprite = cursorGO->sprites["CLICK"];
-		Projectile* p = new Projectile();
-		p->Init(GOMan->FetchGO());
-		p->GO->sprites["MOVING"] = BaseProjectile;
-		p->GO->activeSprite = p->GO->sprites["MOVING"];
-		p->GO->pos = player->GO->pos;
-		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
-		p->GO->vel.z = 0;
-		p->GO->scale = 3;
-		p->targetArea.x = cursorGO->pos.x;
-		p->targetArea.y = cursorGO->pos.y;
-		p->spellToCastAtArea = player->currentHand[0];
-		projectiles.push_back(p);
+		FireCard();
 	}
 	else if(bLButtonState && !Application::GetInstance().IsMousePressed(0))
 	{
@@ -350,6 +406,8 @@ void SceneGame::Update(double dt_raw)
 	{
 		bRButtonState = false;
 	}
+
+
 
 	//Physics Simulation Section
 	fps = (float)(1.f / dt);
@@ -373,6 +431,7 @@ void SceneGame::Update(double dt_raw)
 			spell->GO->scale = spell->radius * 2.f;
 			spell->GO->sprites["RANGE"] = BaseSpell;
 			spell->GO->activeSprite = spell->GO->sprites["RANGE"];
+			spell->GO->transparency = 0.45f;
 			spells.push_back(spell);
 			delete projectiles[i];
 			projectiles[i] = nullptr;
@@ -423,6 +482,45 @@ void SceneGame::Update(double dt_raw)
 
 }
 
+void SceneGame::FireCard()
+{
+	if (player->currentHand.size() > 0)
+	{
+		Projectile* p = new Projectile();
+		p->Init(GOMan->FetchGO());
+		p->GO->sprites["MOVING"] = BaseProjectile;
+		p->GO->activeSprite = p->GO->sprites["MOVING"];
+		p->GO->pos = player->GO->pos;
+		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
+		p->GO->vel.z = 0;
+		p->GO->scale = 3;
+		p->targetArea.x = cursorGO->pos.x;
+		p->targetArea.y = cursorGO->pos.y;
+		p->spellToCastAtArea = player->currentHand[selectedCard - 1];
+		projectiles.push_back(p);
+
+		player->currentHand.erase(player->currentHand.begin() + selectedCard - 1);
+		if (player->currentDeck.deck.size() > 0)
+		{
+			player->currentHand.push_back(player->currentDeck.DrawRandom());
+		}
+
+		if (player->currentHand.size() == 2 && selectedCard == 3)
+		{
+			selectedCard = 2;
+		}
+		else if (player->currentHand.size() == 1 && selectedCard >= 2)
+		{
+			selectedCard = 1;
+		}
+	}
+}
+
+void SceneGame::SelectCard(bool up)
+{
+	selectedCard = Math::Wrap((unsigned short)(selectedCard + 1 - 2 * up), (unsigned short)1, (unsigned short)player->currentHand.size());
+}
+
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
 {
 	if(!mesh || mesh->textureID <= 0)
@@ -471,8 +569,9 @@ void SceneGame::RenderMesh(Mesh *mesh, bool enableLight)
 	{	
 		defaultShader.SetBool("lightEnabled", false);
 	}
-	if(mesh->textureID > 0)
+	if (mesh->textureID > 0)
 	{
+		defaultShader.SetFloat("transparency", mesh->transparency);
 		defaultShader.SetBool("colorTextureEnabled", true);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mesh->textureID);
@@ -483,6 +582,7 @@ void SceneGame::RenderMesh(Mesh *mesh, bool enableLight)
 		defaultShader.SetBool("colorTextureEnabled", false);
 	}
 	mesh->Render();
+	defaultShader.SetFloat("transparency", 0);
 	if(mesh->textureID > 0)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -557,7 +657,7 @@ void SceneGame::Render()
 	viewStack.LoadIdentity();
 	// Top Left
 	modelStack.PushMatrix();
-		modelStack.Translate(-40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
+		modelStack.Translate(-40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 		modelStack.PushMatrix();
 			modelStack.Translate(2, -2, 0);
 			modelStack.Scale(2, 2, 2);
@@ -567,7 +667,7 @@ void SceneGame::Render()
 
 	// Top Right
 	modelStack.PushMatrix();
-		modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
+		modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -575,7 +675,7 @@ void SceneGame::Render()
 
 	// Bot Right
 	modelStack.PushMatrix();
-		modelStack.Translate(40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
+		modelStack.Translate(40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -583,7 +683,7 @@ void SceneGame::Render()
 
 	// Bot Left
 	modelStack.PushMatrix();
-		modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 0);
+		modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 		modelStack.PushMatrix();
 			RenderMesh(meshList[GEO_QUAD], false);
 		modelStack.PopMatrix();
@@ -591,7 +691,7 @@ void SceneGame::Render()
 
 	// Mid
 	modelStack.PushMatrix();	
-		modelStack.Translate(0, 0, 0);
+		modelStack.Translate(0, 0, 5);
 		// LIFE BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
@@ -627,21 +727,50 @@ void SceneGame::Render()
 		// CARD BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(0, -7.5f, 0);
-			modelStack.PushMatrix();
-				modelStack.Translate(6, 0, 0);
-				modelStack.Scale(5, 5, 1);
-				RenderMesh(meshList[GEO_QUAD], false);
-			modelStack.PopMatrix();
-			modelStack.PushMatrix();
-				modelStack.Translate(0, 0, 0);
-				modelStack.Scale(5, 5, 1);
-				RenderMesh(meshList[GEO_QUAD], false);
-			modelStack.PopMatrix();
-			modelStack.PushMatrix();
-				modelStack.Translate(-6, 0, 0);
-				modelStack.Scale(5, 5, 1);
-				RenderMesh(meshList[GEO_QUAD], false);
-			modelStack.PopMatrix();
+			if (player->currentHand.size() > 0)
+			{
+				modelStack.PushMatrix();
+					if (selectedCard == 1)
+						modelStack.Translate(-6, 0, 0);
+					else if (selectedCard == 2)
+						modelStack.Translate(0, 0, 0);
+					else if (selectedCard == 3)
+						modelStack.Translate(6, 0, 0);
+
+					modelStack.Scale(5, 5, 1);
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_SELECTOR];
+					RenderMesh(meshList[GEO_QUAD], false);
+					meshList[GEO_QUAD]->textureID = 0;
+				modelStack.PopMatrix();
+			}
+
+			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
+			if (player->currentHand.size() > 2)
+			{
+				modelStack.PushMatrix();
+					modelStack.Translate(6, 0, 0);
+					modelStack.Scale(5, 5, 1);
+					RenderMesh(meshList[GEO_QUAD], false);
+				modelStack.PopMatrix();
+			}
+			if (player->currentHand.size() > 1)
+			{
+				modelStack.PushMatrix();
+					modelStack.Translate(0, 0, 0);
+					modelStack.Scale(5, 5, 1);
+					RenderMesh(meshList[GEO_QUAD], false);
+				modelStack.PopMatrix();
+			}
+			if (player->currentHand.size() > 0)
+			{
+				modelStack.PushMatrix();
+					modelStack.Translate(-6, 0, 0);
+					modelStack.Scale(5, 5, 1);
+					RenderMesh(meshList[GEO_QUAD], false);
+				modelStack.PopMatrix();
+			}
+			meshList[GEO_QUAD]->textureID = 0;
+
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 }

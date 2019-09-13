@@ -29,6 +29,10 @@ class SceneGame : public Scene
 	{
 		CURSOR_NORMAL,
 		CURSOR_CLICKED,
+
+		CARD_SELECTOR,
+		CARD_BACK,
+
 		LIFE_BAR_FILL,
 		LIFE_BAR_LEFT,
 		LIFE_BAR_RIGHT,
@@ -49,6 +53,9 @@ public:
 
 	void RenderText(Mesh* mesh, std::string text, Color color);
 	void RenderMesh(Mesh *mesh, bool enableLight);
+
+	void FireCard();
+	void SelectCard(bool up);
 private:
 	unsigned m_vertexArrayID;
 

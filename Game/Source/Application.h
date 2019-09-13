@@ -24,6 +24,8 @@ public:
 
 	GameUserSettings usrsttngs;
 
+	short scrollState;
+
 	bool windowHasFocus;
 
 private:

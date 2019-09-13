@@ -6,9 +6,13 @@
 struct Deck
 {
 	///what's currently being played
-	std::vector<Spell> CurrentDeck;
-	///For knowing what to refill deck with
-	std::vector<Spell> DeckMemory;
+	std::vector<Spell> deck;
 	///Draw a random card
-	Spell DrawRandom();
+	inline Spell DrawRandom()
+	{
+		auto index = Math::RandIntMinMax(0, deck.size() - 1);
+		auto toReturn = deck[index];
+		deck.erase(deck.begin() + index);
+		return toReturn;
+	}
 };

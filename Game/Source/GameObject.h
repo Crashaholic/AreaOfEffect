@@ -21,6 +21,7 @@ struct GameObject
 	~GameObject();
 
 	Sprite activeSprite;
+	float transparency;
 };
 
 #endif

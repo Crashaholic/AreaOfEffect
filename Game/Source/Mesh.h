@@ -25,6 +25,8 @@ public:
 	unsigned indexBuffer;
 	unsigned indexSize;
 
+	float transparency;
+
 	Material material;
 	unsigned textureID;
 };

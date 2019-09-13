@@ -35,6 +35,15 @@ void resize_callback(GLFWwindow* window, int w, int h)
 	glViewport(0, 0, w, h);
 }
 
+void scroll_callback(GLFWwindow* window, double x, double y)
+{
+	short* temp = &(Application::GetInstance().scrollState);
+	if (y > 0)
+		*temp = 1;
+	else if (y < 0)
+		*temp = -1;
+}
+
 bool Application::IsKeyPressed(unsigned short key)
 {
 	if (glfwGetWindowAttrib(m_window, GLFW_FOCUSED))
@@ -116,6 +125,8 @@ void Application::Init()
 	//glfwSetKeyCallback(m_window, key_callback);
 	glfwSetWindowSizeCallback(m_window, resize_callback);
 
+	glfwSetScrollCallback(m_window, scroll_callback);
+
 	glewExperimental = true; // Needed for core profile
 	//Initialize GLEW
 	GLenum err = glewInit();
@@ -148,8 +159,10 @@ void Application::Run()
 		//Swap buffers
 		glfwSwapBuffers(m_window);
 		//Get and organize events, like keyboard and mouse input, window resizing, etc...
+		scrollState = 0;
 		glfwPollEvents();
         m_timer.waitUntil(frameTime);       // Frame rate limiter. Limits each frame to a specified time in ms.   
+
 
 	} //Check if the ESC key had been pressed or if the window had been closed
 	scene->Exit();

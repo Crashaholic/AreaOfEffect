@@ -7,6 +7,7 @@ GameObject::GameObject()
 	, active(false)
 	, mass(1.f)
 	, hookingClass(typeid(int))
+	, transparency(0)
 {
 }
 

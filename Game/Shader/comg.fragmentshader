@@ -61,6 +61,8 @@ uniform sampler2D colorTexture;
 uniform bool textEnabled;
 uniform vec3 textColor;
 
+uniform float transparency;
+
 void main(){
 	if(lightEnabled == true)
 	{
@@ -120,7 +122,7 @@ void main(){
 		{
 			if(textEnabled == true)
 			{
-				color = texture2D( colorTexture, texCoord ) * vec4( textColor, 1 );
+				color = texture2D( colorTexture, texCoord ) * vec4( textColor, 1 - transparency );
 				if (color.a < 0.1)
 					discard;
 			}
@@ -128,8 +130,9 @@ void main(){
 				color = texture2D( colorTexture, texCoord );
 				if (color.a < 0.1)
 					discard;
+				color.a = 1 - transparency;
 		}
 		else
-			color = vec4( fragmentColor, 1 );
+			color = vec4( fragmentColor, 1 - transparency );
 	}
 }
