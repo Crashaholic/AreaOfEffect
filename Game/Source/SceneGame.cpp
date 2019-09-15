@@ -163,7 +163,14 @@ void SceneGame::Init()
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
+	temp1.dmg = Damage(-20, 0, 0, 0);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
+	player->currentDeck.deck.push_back(temp1);
 	
+	player->originalDeck = player->currentDeck;
+
 	player->currentHand.push_back(player->currentDeck.DrawRandom());
 	player->currentHand.push_back(player->currentDeck.DrawRandom());
 	player->currentHand.push_back(player->currentDeck.DrawRandom());
@@ -263,12 +270,14 @@ void SceneGame::Update(double dt_raw)
 		cursorGO->pos = InvView * cursorGO->pos;
 		cursorGO->pos += camera.position;
 	}
+	else 
+		cursorGO->pos += player->GO->vel * (float)dt;
+
 
 	bool SkipKBXDirInput = false;
 	bool SkipKBYDirInput = false;
 
 	// poll controller first
-	float totalMovement = 0.0f;
 	if (present == 1)
 	{
 		int axesCount;
@@ -279,23 +288,14 @@ void SceneGame::Update(double dt_raw)
 		{
 			SkipKBXDirInput = true;
 			player->MoveX_Pad(temp, dt);
-			player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
-			player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
-			totalMovement += 1.3f - abs(temp);
 		}
 		temp = (float)RoundOff((double)axes[1], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
 			SkipKBYDirInput = true;
 			player->MoveY_Pad(temp, dt);
-			player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
-			player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 1.3f - abs(temp), true, true);
-			totalMovement += 1.3f - abs(temp);
 		}
 	}
-
-	if (doNotPollMouse)
-		cursorGO->pos += player->GO->vel * (float)dt;
 
 	//then poll kb
 	if (!SkipKBYDirInput)
@@ -321,8 +321,8 @@ void SceneGame::Update(double dt_raw)
 
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
-	std::cout << player->GO->sprites["MOVE_X_LEFT"].first->m_anim->animTime << ',';
-	std::cout << player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->animTime << '\n';
+	//std::cout << player->GO->sprites["MOVE_X_LEFT"].first->m_anim->animTime << ',';
+	//std::cout << player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->animTime << '\n';
 	if (player->GO->vel.y > 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
 	else if (player->GO->vel.y < 0)
@@ -342,6 +342,10 @@ void SceneGame::Update(double dt_raw)
 		SelectCard(0);
 	}
 
+	if (Application::GetInstance().IsKeyPressed('R'))
+	{
+		ReloadDeck();
+	}
 
 	if (present == 1)
 	{
@@ -369,7 +373,6 @@ void SceneGame::Update(double dt_raw)
 		else if (LBPressed && buttons[4] == GLFW_RELEASE)
 		{
 			LBPressed = false;
-			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
 		}
 
 		static bool RBPressed = false;
@@ -381,7 +384,17 @@ void SceneGame::Update(double dt_raw)
 		else if (RBPressed && buttons[5] == GLFW_RELEASE)
 		{
 			RBPressed = false;
-			cursorGO->activeSprite = cursorGO->sprites["NORMAL"];
+		}
+
+		static bool PadXPressed = false;
+		if (!PadXPressed && buttons[3] == GLFW_PRESS)
+		{
+			PadXPressed = true;
+			ReloadDeck();
+		}
+		else if (PadXPressed && buttons[3] == GLFW_RELEASE)
+		{
+			PadXPressed = false;
 		}
 	}
 
@@ -526,6 +539,15 @@ void SceneGame::SelectCard(bool up)
 	selectedCard = Math::Wrap((unsigned short)(selectedCard + 1 - 2 * up), (unsigned short)1, (unsigned short)player->currentHand.size());
 }
 
+void SceneGame::ReloadDeck()
+{
+	player->currentDeck = player->originalDeck;
+
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
+	player->currentHand.push_back(player->currentDeck.DrawRandom());
+}
+
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)
 {
 	if(!mesh || mesh->textureID <= 0)
@@ -655,9 +677,11 @@ void SceneGame::Render()
 	fpsCounter << (int)fps;
 	std::setprecision(6);
 
-	std::stringstream playerPos;
-	playerPos << std::setprecision(2) << player->GO->pos;
-	std::setprecision(6);
+	std::stringstream playerHpCurr;
+	playerHpCurr << (int)player->health;
+
+	std::stringstream playerHpMax;
+	playerHpMax << (int)player->maxHealth;
 
 	viewStack.LoadIdentity();
 	// Top Left
@@ -670,29 +694,29 @@ void SceneGame::Render()
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 
-	// Top Right
-	modelStack.PushMatrix();
-		modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
-		modelStack.PushMatrix();
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
-	modelStack.PopMatrix();
+	//// Top Right
+	//modelStack.PushMatrix();
+	//	modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
+	//	modelStack.PushMatrix();
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//modelStack.PopMatrix();
 
-	// Bot Right
-	modelStack.PushMatrix();
-		modelStack.Translate(40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
-		modelStack.PushMatrix();
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
-	modelStack.PopMatrix();
+	//// Bot Right
+	//modelStack.PushMatrix();
+	//	modelStack.Translate(40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
+	//	modelStack.PushMatrix();
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//modelStack.PopMatrix();
 
-	// Bot Left
-	modelStack.PushMatrix();
-		modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
-		modelStack.PushMatrix();
-			RenderMesh(meshList[GEO_QUAD], false);
-		modelStack.PopMatrix();
-	modelStack.PopMatrix();
+	//// Bot Left
+	//modelStack.PushMatrix();
+	//	modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
+	//	modelStack.PushMatrix();
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//modelStack.PopMatrix();
 
 	// Mid
 	modelStack.PushMatrix();	
@@ -700,8 +724,7 @@ void SceneGame::Render()
 		// LIFE BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
-			// HACK: HEALTH AS SCALE.X VALUE
-			modelStack.Scale(((player->health) / (player->maxHealth)) * 10, 1.5f, 1);
+			modelStack.Scale(((player->health) / (player->maxHealth)) * 10, 2, 1);
 			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::LIFE_BAR_FILL];
 			RenderMesh(meshList[GEO_BAR], false);
 			meshList[GEO_BAR]->textureID = 0;
@@ -727,7 +750,17 @@ void SceneGame::Render()
 			meshList[GEO_QUAD]->textureID = 0;
 		modelStack.PopMatrix();
 
+		modelStack.PushMatrix();
+			modelStack.Translate(-6.f, 5.f, 0);
+			modelStack.Scale(2.f, 2.f, 2.f);
+			RenderText(meshList[GEO_TEXT], playerHpCurr.str(), { 1, 1, 1 });
+		modelStack.PopMatrix();
 
+		modelStack.PushMatrix();
+			modelStack.Translate(-6.f, 1.5f, 0);
+			modelStack.Scale(2.f, 2.f, 2.f);
+			RenderText(meshList[GEO_TEXT], playerHpMax.str(), { 1, 1, 1 });
+		modelStack.PopMatrix();
 
 		// CARD BAR
 		modelStack.PushMatrix();

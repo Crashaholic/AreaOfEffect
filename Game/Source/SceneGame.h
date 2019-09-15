@@ -56,6 +56,7 @@ public:
 
 	void FireCard();
 	void SelectCard(bool up);
+	void ReloadDeck();
 private:
 	unsigned m_vertexArrayID;
 
