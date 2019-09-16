@@ -48,6 +48,21 @@ void GameUserSettings::LoadSettings(std::string location)
 			MOVE_RIGHT = std::stoul(line.substr(line.find('=') + 1));
 			continue;
 		}
+		if (line.find("SELECT_CARD_LEFT") != std::string::npos)
+		{
+			SELECT_CARD_LEFT = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("SELECT_CARD_RIGHT") != std::string::npos)
+		{
+			SELECT_CARD_RIGHT = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("RESTOCK_DECK") != std::string::npos)
+		{
+			RESTOCK_DECK = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
 		if (line.find("cursorSensX") != std::string::npos)
 		{
 			cursorSensX = std::stoul(line.substr(line.find('=') + 1));
@@ -71,6 +86,11 @@ void GameUserSettings::LoadSettings(std::string location)
 		if (line.find("lifebarDecoration") != std::string::npos)
 		{
 			lifebarDecoration = std::stoul(line.substr(line.find('=') + 1));
+			continue;
+		}
+		if (line.find("lifebarValues") != std::string::npos)
+		{
+			lifebarValues = std::stoul(line.substr(line.find('=') + 1));
 			continue;
 		}
 	}

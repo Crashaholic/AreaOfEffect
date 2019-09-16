@@ -72,6 +72,11 @@ int Application::GetWindowHeight()
 	return m_height;
 }
 
+GLFWwindow * Application::GetWindow()
+{
+	return m_window;
+}
+
 Application::Application()
 {
 }

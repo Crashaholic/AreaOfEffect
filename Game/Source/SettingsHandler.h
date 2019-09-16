@@ -12,6 +12,9 @@ struct GameUserSettings
 	unsigned int MOVE_BACKWARD;
 	unsigned int MOVE_LEFT;
 	unsigned int MOVE_RIGHT;
+	unsigned int SELECT_CARD_LEFT;
+	unsigned int SELECT_CARD_RIGHT;
+	unsigned int RESTOCK_DECK;
 
 	unsigned int cursorSensX;
 	unsigned int cursorSensY;
@@ -19,6 +22,7 @@ struct GameUserSettings
 	unsigned int cursorInvY;
 
 	unsigned int lifebarDecoration;
+	unsigned int lifebarValues;
 
 	void LoadSettings(std::string location);
 
