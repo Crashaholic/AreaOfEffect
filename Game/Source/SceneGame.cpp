@@ -70,11 +70,13 @@ void SceneGame::Init()
 
 	meshList[GEO_AXES] = MeshBuilder::GenerateAxes("reference", 1000, 1000, 1000);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
-	meshList[GEO_BAR] = MeshBuilder::GenerateBar("quad", Color(1, 1, 1), 1);
+	meshList[GEO_BAR]  = MeshBuilder::GenerateBar("quad", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
 	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
+	meshList[GEO_QUAD]->transparency = 0.25f;
+	meshList[GEO_BAR]->transparency = 0.25f;
 
 	textures[TEXTURE_LIST::CURSOR_NORMAL        ] = Load::TGA("Image//cursor.tga");
 	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
@@ -270,7 +272,7 @@ void SceneGame::Update(double dt_raw)
 		cursorGO->pos = InvView * cursorGO->pos;
 		cursorGO->pos += camera.position;
 	}
-	else 
+
 		cursorGO->pos += player->GO->vel * (float)dt;
 
 
@@ -318,11 +320,10 @@ void SceneGame::Update(double dt_raw)
 		player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 		player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 	}
+	//TODO: FIND A WAY FOR CONTROLLER ANIMATION TIME DILATION (BASICALLY SLOWER MOVEMENT = BIGGER TIME NUMBER)
 
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
-	//std::cout << player->GO->sprites["MOVE_X_LEFT"].first->m_anim->animTime << ',';
-	//std::cout << player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->animTime << '\n';
 	if (player->GO->vel.y > 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
 	else if (player->GO->vel.y < 0)
@@ -333,6 +334,8 @@ void SceneGame::Update(double dt_raw)
 	else if (player->GO->vel.x < 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
 
+
+
 	if (Application::GetInstance().scrollState == 1)
 	{
 		SelectCard(1);
@@ -342,10 +345,35 @@ void SceneGame::Update(double dt_raw)
 		SelectCard(0);
 	}
 
+	
+
+	static bool QPressed = false;
+	static bool EPressed = false;
+	if (!QPressed && Application::GetInstance().IsKeyPressed('Q'))
+	{
+		QPressed = true;
+		SelectCard(1);
+	}
+	else if (QPressed && !Application::GetInstance().IsKeyPressed('Q'))
+	{
+		QPressed = false;
+	}
+
+	if (!EPressed && Application::GetInstance().IsKeyPressed('E'))
+	{
+		EPressed = true;
+		SelectCard(0);
+	}
+	else if (EPressed && !Application::GetInstance().IsKeyPressed('E'))
+	{
+		EPressed = false;
+	}
+
 	if (Application::GetInstance().IsKeyPressed('R'))
 	{
 		ReloadDeck();
 	}
+
 
 	if (present == 1)
 	{
@@ -752,13 +780,13 @@ void SceneGame::Render()
 
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 5.f, 0);
-			modelStack.Scale(2.f, 2.f, 2.f);
+			modelStack.Scale(1.5f, 1.5f, 1.f);
 			RenderText(meshList[GEO_TEXT], playerHpCurr.str(), { 1, 1, 1 });
 		modelStack.PopMatrix();
 
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 1.5f, 0);
-			modelStack.Scale(2.f, 2.f, 2.f);
+			modelStack.Scale(1.5f, 1.5f, 1.f);
 			RenderText(meshList[GEO_TEXT], playerHpMax.str(), { 1, 1, 1 });
 		modelStack.PopMatrix();
 
