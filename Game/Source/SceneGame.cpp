@@ -82,6 +82,25 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
 	textures[TEXTURE_LIST::CARD_SELECTOR        ] = Load::TGA("Image//selector.tga");
 	textures[TEXTURE_LIST::CARD_BACK            ] = Load::TGA("Image//card_drawn.tga");
+	textures[TEXTURE_LIST::CARD_ELEMENT_PHYS    ] = Load::TGA("Image//phys_ico.tga");
+	textures[TEXTURE_LIST::CARD_ELEMENT_FIRE    ] = Load::TGA("Image//fire_ico.tga");
+	textures[TEXTURE_LIST::CARD_ELEMENT_COLD    ] = Load::TGA("Image//cold_ico.tga");
+	textures[TEXTURE_LIST::CARD_ELEMENT_LTNG    ] = Load::TGA("Image//ltng_ico.tga");
+	textures[TEXTURE_LIST::CARD_POWER_1         ] = Load::TGA("Image//power1.tga");
+	textures[TEXTURE_LIST::CARD_POWER_2         ] = Load::TGA("Image//power2.tga");
+	textures[TEXTURE_LIST::CARD_POWER_3         ] = Load::TGA("Image//power3.tga");
+	textures[TEXTURE_LIST::CARD_POWER_4         ] = Load::TGA("Image//power4.tga");
+	textures[TEXTURE_LIST::CARD_POWER_5         ] = Load::TGA("Image//power5.tga");
+	textures[TEXTURE_LIST::CARD_POWER_6         ] = Load::TGA("Image//power6.tga");
+	textures[TEXTURE_LIST::CARD_POWER_7         ] = Load::TGA("Image//power7.tga");
+	textures[TEXTURE_LIST::CARD_POWER_8         ] = Load::TGA("Image//power8.tga");
+	textures[TEXTURE_LIST::CARD_POWER_9         ] = Load::TGA("Image//power9.tga");
+	textures[TEXTURE_LIST::CARD_POWER_10        ] = Load::TGA("Image//power10.tga");
+	textures[TEXTURE_LIST::CARD_POWER_11        ] = Load::TGA("Image//power11.tga");
+	textures[TEXTURE_LIST::CARD_POWER_12        ] = Load::TGA("Image//power12.tga");
+	textures[TEXTURE_LIST::CARD_POWER_13        ] = Load::TGA("Image//power13.tga");
+	textures[TEXTURE_LIST::CARD_POWER_14        ] = Load::TGA("Image//power14.tga");
+	textures[TEXTURE_LIST::CARD_POWER_15        ] = Load::TGA("Image//power15.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT       ] = Load::TGA("Image//life_right.tga");
@@ -810,32 +829,40 @@ void SceneGame::Render()
 				modelStack.PopMatrix();
 			}
 
-			meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 			if (player->currentHand.size() > 2)
 			{
 				modelStack.PushMatrix();
 					modelStack.Translate(6, 0, 0);
 					modelStack.Scale(5, 5, 1);
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_POWER_15];
 					RenderMesh(meshList[GEO_QUAD], false);
-				modelStack.PopMatrix();
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_PHYS];
+					RenderMesh(meshList[GEO_QUAD], false);
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
+					RenderMesh(meshList[GEO_QUAD], false);
+					meshList[GEO_QUAD]->textureID = 0;
+					modelStack.PopMatrix();
 			}
 			if (player->currentHand.size() > 1)
 			{
 				modelStack.PushMatrix();
 					modelStack.Translate(0, 0, 0);
 					modelStack.Scale(5, 5, 1);
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 					RenderMesh(meshList[GEO_QUAD], false);
-				modelStack.PopMatrix();
+					meshList[GEO_QUAD]->textureID = 0;
+					modelStack.PopMatrix();
 			}
 			if (player->currentHand.size() > 0)
 			{
 				modelStack.PushMatrix();
 					modelStack.Translate(-6, 0, 0);
 					modelStack.Scale(5, 5, 1);
+					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 					RenderMesh(meshList[GEO_QUAD], false);
-				modelStack.PopMatrix();
+					meshList[GEO_QUAD]->textureID = 0;
+					modelStack.PopMatrix();
 			}
-			meshList[GEO_QUAD]->textureID = 0;
 
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
