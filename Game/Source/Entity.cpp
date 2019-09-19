@@ -31,18 +31,18 @@ void Entity::AddStatusEffect(Damage dmg, double duration)
 
 }
 
-void Entity::TakeDamage(Damage dmg)
+void Entity::TakeDamage(Damage dmg, double dt)
 {
-	if ((health - (dmg - resistance).Total()) > maxHealth)
+	if ((health - (dmg - resistance).Total() * (float)dt) > maxHealth)
 	{
 		health = maxHealth;
 		return;
 	}
-	else if (health - (dmg - resistance).Total() < 0)
+	else if (health - (dmg - resistance).Total() * (float)dt < 0)
 	{
 		health = 0;
 		return;
 	}
-	health -= (dmg - resistance).Total();
+	health -= (dmg - resistance).Total() * (float)dt;
 }
 

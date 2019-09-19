@@ -17,10 +17,10 @@ void Spell::DropAt(vec3 pos)
 	GO->pos = pos;
 }
 
-void Spell::DamageNearby(Entity * ent)
+void Spell::DamageNearby(Entity * ent, double dt)
 {
 	if ((ent->GO->pos - this->GO->pos).Length() <= radius)
 	{
-		ent->TakeDamage(dmg);
+		ent->TakeDamage(dmg, dt);
 	}
 }

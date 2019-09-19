@@ -22,7 +22,7 @@ struct Entity
 	void CheckStatuses();
 	void AddStatusEffect(Damage dmg, double duration);
 
-	void TakeDamage(Damage dmg);
+	void TakeDamage(Damage dmg, double dt);
 
 	float health;
 	float maxHealth;

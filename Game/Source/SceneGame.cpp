@@ -204,7 +204,7 @@ void SceneGame::Init()
 	player->currentHand.push_back(player->currentDeck.DrawRandom());
 	player->currentHand.push_back(player->currentDeck.DrawRandom());
 
-	player->GO->pos = { m_worldWidth / 2.f, m_worldHeight / 2.f, 0 };
+	player->GO->pos = { m_worldWidth / 2.f, m_worldHeight / 2.f, 1 };
 
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_FORWARD     )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_FORWARD);
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_BACKWARD    )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_BACKWARD);
@@ -503,14 +503,12 @@ void SceneGame::Update(double dt_raw)
 		std::setprecision(6);
 	}
 
-	static bool increment = true;
-
 	for (size_t i = 0; i < spells.size(); ++i)
 	{
 
 		if (spells[i]->timer.Lap() >= spells[i]->delay)
 		{
-			spells[i]->DamageNearby(player);
+			spells[i]->DamageNearby(player, dt);
 		}
 
 		if (spells[i]->timer.Lap() >= spells[i]->duration + spells[i]->delay)
