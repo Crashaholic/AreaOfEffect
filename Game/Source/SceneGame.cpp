@@ -70,13 +70,13 @@ void SceneGame::Init()
 
 	meshList[GEO_AXES] = MeshBuilder::GenerateAxes("reference", 1000, 1000, 1000);
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
-	meshList[GEO_BAR]  = MeshBuilder::GenerateBar("quad", Color(1, 1, 1), 1);
+	meshList[GEO_BAR]  = MeshBuilder::GenerateBar("bar", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
 	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
-	meshList[GEO_QUAD]->transparency = 0.25f;
-	meshList[GEO_BAR]->transparency = 0.25f;
+	meshList[GEO_QUAD]->transparency = 0.5f;
+	meshList[GEO_BAR]->transparency = 0.5f;
 
 	textures[TEXTURE_LIST::CURSOR_NORMAL        ] = Load::TGA("Image//cursor.tga");
 	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
@@ -86,6 +86,7 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::CARD_ELEMENT_FIRE    ] = Load::TGA("Image//fire_ico.tga");
 	textures[TEXTURE_LIST::CARD_ELEMENT_COLD    ] = Load::TGA("Image//cold_ico.tga");
 	textures[TEXTURE_LIST::CARD_ELEMENT_LTNG    ] = Load::TGA("Image//ltng_ico.tga");
+	textures[TEXTURE_LIST::CARD_ELEMENT_HEAL    ] = Load::TGA("Image//heal_ico.tga");
 	textures[TEXTURE_LIST::CARD_POWER_1         ] = Load::TGA("Image//power1.tga");
 	textures[TEXTURE_LIST::CARD_POWER_2         ] = Load::TGA("Image//power2.tga");
 	textures[TEXTURE_LIST::CARD_POWER_3         ] = Load::TGA("Image//power3.tga");
@@ -101,6 +102,7 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::CARD_POWER_13        ] = Load::TGA("Image//power13.tga");
 	textures[TEXTURE_LIST::CARD_POWER_14        ] = Load::TGA("Image//power14.tga");
 	textures[TEXTURE_LIST::CARD_POWER_15        ] = Load::TGA("Image//power15.tga");
+	textures[TEXTURE_LIST::CARD_INFO            ] = Load::TGA("Image//blk.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT       ] = Load::TGA("Image//life_right.tga");
@@ -135,6 +137,7 @@ void SceneGame::Init()
 	player = new Player();
 	player->Init(GOMan->FetchGO());
 	player->InitCam(&camera);
+	player->GO->pos.z = 6;
 	player->GO->mass = 10;
 	player->GO->scale = 3;
 	
@@ -155,16 +158,19 @@ void SceneGame::Init()
 	
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
 
-	player->maxHealth = 2841.f;
-	player->health = 2841.f;
+	player->maxHealth = 10.f;
+	player->health = 10.f;
 
 	Spell temp1;
-	temp1.delay = 0.5f;
+	temp1.delay = 0.0f;
 	temp1.radius = 1;
 	temp1.duration = 5;
-	temp1.dmg = Damage{0, 10, 0, 0};
+	temp1.dmg = Damage{0, 1, 0, 0};
 
+	player->resistance.Phys = 75.f;
 	player->resistance.Fire = 75.f;
+	player->resistance.Cold = 75.f;
+	player->resistance.Light = 75.f;
 
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
@@ -174,17 +180,19 @@ void SceneGame::Init()
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
+	temp1.dmg = Damage(0, 0, 1, 0);
 	temp1.radius = 5;
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
+	temp1.dmg = Damage(0, 0, 0, 1);
 	temp1.radius = 10;
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
-	temp1.dmg = Damage(-20, 0, 0, 0);
+	temp1.dmg = Damage(-2, 0, 0, 0);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
@@ -471,7 +479,7 @@ void SceneGame::Update(double dt_raw)
 
 
 	//Physics Simulation Section
-	fps = (float)(1.f / dt);
+	fps = (float)(1.f / dt_raw);
 
 	player->GO->activeSprite.first->Update(dt);
 
@@ -556,11 +564,13 @@ void SceneGame::FireCard()
 		p->GO->sprites["MOVING"] = BaseProjectile;
 		p->GO->activeSprite = p->GO->sprites["MOVING"];
 		p->GO->pos = player->GO->pos;
+		p->GO->pos.z = 1;
 		p->GO->vel = (cursorGO->pos - player->GO->pos).Normalized() * player->yeetSpeed;
 		p->GO->vel.z = 0;
 		p->GO->scale = 3;
 		p->targetArea.x = cursorGO->pos.x;
 		p->targetArea.y = cursorGO->pos.y;
+		p->targetArea.z = 1;
 		p->spellToCastAtArea = player->currentHand[selectedCard - 1];
 		projectiles.push_back(p);
 
@@ -741,6 +751,14 @@ void SceneGame::Render()
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 
+	//// Top Centre
+	//modelStack.PushMatrix();
+	//	modelStack.Translate(0, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
+	//	modelStack.PushMatrix();
+	//		RenderMesh(meshList[GEO_QUAD], false);
+	//	modelStack.PopMatrix();
+	//modelStack.PopMatrix();
+
 	//// Top Right
 	//modelStack.PushMatrix();
 	//	modelStack.Translate(40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
@@ -757,6 +775,68 @@ void SceneGame::Render()
 	//	modelStack.PopMatrix();
 	//modelStack.PopMatrix();
 
+	// Bot Centre
+	modelStack.PushMatrix();
+		modelStack.Translate(0, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
+		if (player->currentHand.size() > 0)
+		{
+			std::stringstream ss;
+			ss.str("");
+			ss << RoundOff(player->currentHand[selectedCard - 1].delay, 3);
+
+			modelStack.PushMatrix();
+				modelStack.Translate(0.f, 5.f, 0.f);
+				modelStack.Scale(15.f, 4.5f, 1.f);
+				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_INFO];
+				RenderMesh(meshList[GEO_QUAD], false);
+				meshList[GEO_QUAD]->textureID = 0;
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(-6.5f, 6.5f, 1.f);
+				modelStack.Scale(1.f, 1.f, 1.f);
+				RenderText(meshList[GEO_TEXT], "Rad: " + std::to_string(player->currentHand[selectedCard - 1].radius), {1, 1, 1});
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(-6.5f, 5.5f, 1.f);
+				modelStack.Scale(1.f, 1.f, 1.f);
+				std::setprecision(3);
+				RenderText(meshList[GEO_TEXT], "Dly: " + ss.str(), {1, 1, 1});
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(-6.5f, 4.5f, 1.f);
+				modelStack.Scale(1.f, 1.f, 1.f);
+				ss.str("");
+				ss << RoundOff(player->currentHand[selectedCard - 1].duration, 3);
+				RenderText(meshList[GEO_TEXT], "Dur: " + ss.str(), {1, 1, 1});
+				std::setprecision(6);
+			modelStack.PopMatrix();
+			modelStack.PushMatrix();
+				modelStack.Translate(-6.5f, 3.5f, 1.f);
+				modelStack.Scale(1.f, 1.f, 1.f);
+				if (player->currentHand[selectedCard - 1].dmg.Phys > 0)
+				{
+					RenderText(meshList[GEO_TEXT], "Val: " + std::to_string((int)player->currentHand[selectedCard - 1].dmg.Phys), { 1, 1, 1 });
+				}
+				else if (player->currentHand[selectedCard - 1].dmg.Fire > 0)
+				{
+					RenderText(meshList[GEO_TEXT], "Val: " + std::to_string((int)player->currentHand[selectedCard - 1].dmg.Fire), { 1, 1, 1 });
+				}
+				else if (player->currentHand[selectedCard - 1].dmg.Cold > 0)
+				{
+					RenderText(meshList[GEO_TEXT], "Val: " + std::to_string((int)player->currentHand[selectedCard - 1].dmg.Cold), { 1, 1, 1 });
+				}
+				else if (player->currentHand[selectedCard - 1].dmg.Light > 0)
+				{
+					RenderText(meshList[GEO_TEXT], "Val: " + std::to_string((int)player->currentHand[selectedCard - 1].dmg.Light), { 1, 1, 1 });
+				}
+				else if (player->currentHand[selectedCard - 1].dmg.Total() < 0)
+				{
+					RenderText(meshList[GEO_TEXT], "Val: " + std::to_string(-(int)player->currentHand[selectedCard - 1].dmg.Total()), { 1, 1, 1 });
+				}
+			modelStack.PopMatrix();
+		}
+	modelStack.PopMatrix();
+
 	//// Bot Left
 	//modelStack.PushMatrix();
 	//	modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
@@ -766,19 +846,19 @@ void SceneGame::Render()
 	//modelStack.PopMatrix();
 
 	// Mid
-	modelStack.PushMatrix();	
+	modelStack.PushMatrix();
 		modelStack.Translate(0, 0, 5);
 		// LIFE BAR
 		modelStack.PushMatrix();
 			modelStack.Translate(-5, 3.5f, 0);
-			modelStack.Scale(((player->health) / (player->maxHealth)) * 10, 2, 1);
+			modelStack.Scale(((player->health) / (player->maxHealth)) * 10, 1, 1);
 			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::LIFE_BAR_FILL];
 			RenderMesh(meshList[GEO_BAR], false);
 			meshList[GEO_BAR]->textureID = 0;
 		modelStack.PopMatrix();
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 3.5f, 1);
-			modelStack.Scale(2, 2, 1);
+			modelStack.Scale(1.5f, 1.5f, 1);
 			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
 				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT];
 			else if (Application::GetInstance().usrsttngs.lifebarDecoration == 1)
@@ -788,7 +868,7 @@ void SceneGame::Render()
 		modelStack.PopMatrix();
 		modelStack.PushMatrix();
 			modelStack.Translate(6.f, 3.5f, 1);
-			modelStack.Scale(2, 2, 1);
+			modelStack.Scale(1.5f, 1.5f, 1);
 			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
 				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT];
 			else if (Application::GetInstance().usrsttngs.lifebarDecoration == 1)
@@ -834,9 +914,26 @@ void SceneGame::Render()
 				modelStack.PushMatrix();
 					modelStack.Translate(6, 0, 0);
 					modelStack.Scale(5, 5, 1);
-					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_POWER_15];
-					RenderMesh(meshList[GEO_QUAD], false);
-					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_PHYS];
+					if (player->currentHand[2].dmg.Phys > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_PHYS];
+					}
+					else if (player->currentHand[2].dmg.Fire > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_FIRE];
+					}
+					else if (player->currentHand[2].dmg.Cold > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_COLD];
+					}
+					else if (player->currentHand[2].dmg.Light > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_LTNG];
+					}
+					else if (player->currentHand[2].dmg.Total() < 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_HEAL];
+					}
 					RenderMesh(meshList[GEO_QUAD], false);
 					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 					RenderMesh(meshList[GEO_QUAD], false);
@@ -848,6 +945,27 @@ void SceneGame::Render()
 				modelStack.PushMatrix();
 					modelStack.Translate(0, 0, 0);
 					modelStack.Scale(5, 5, 1);
+					if (player->currentHand[1].dmg.Phys > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_PHYS];
+					}
+					else if (player->currentHand[1].dmg.Fire > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_FIRE];
+					}
+					else if (player->currentHand[1].dmg.Cold > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_COLD];
+					}
+					else if (player->currentHand[1].dmg.Light > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_LTNG];
+					}
+					else if (player->currentHand[1].dmg.Total() < 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_HEAL];
+					}
+					RenderMesh(meshList[GEO_QUAD], false);
 					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 					RenderMesh(meshList[GEO_QUAD], false);
 					meshList[GEO_QUAD]->textureID = 0;
@@ -858,12 +976,32 @@ void SceneGame::Render()
 				modelStack.PushMatrix();
 					modelStack.Translate(-6, 0, 0);
 					modelStack.Scale(5, 5, 1);
+					if (player->currentHand[0].dmg.Phys > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_PHYS];
+					}
+					else if (player->currentHand[0].dmg.Fire > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_FIRE];
+					}
+					else if (player->currentHand[0].dmg.Cold > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_COLD];
+					}
+					else if (player->currentHand[0].dmg.Light > 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_LTNG];
+					}
+					else if (player->currentHand[0].dmg.Total() < 0)
+					{
+						meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_ELEMENT_HEAL];
+					}
+					RenderMesh(meshList[GEO_QUAD], false);
 					meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::CARD_BACK];
 					RenderMesh(meshList[GEO_QUAD], false);
 					meshList[GEO_QUAD]->textureID = 0;
 					modelStack.PopMatrix();
 			}
-
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
 }

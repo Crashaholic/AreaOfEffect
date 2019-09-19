@@ -37,6 +37,7 @@ class SceneGame : public Scene
 		CARD_ELEMENT_FIRE,
 		CARD_ELEMENT_COLD,
 		CARD_ELEMENT_LTNG,
+		CARD_ELEMENT_HEAL,
 
 		CARD_POWER_1,
 		CARD_POWER_2,
@@ -53,6 +54,8 @@ class SceneGame : public Scene
 		CARD_POWER_13,
 		CARD_POWER_14,
 		CARD_POWER_15,
+
+		CARD_INFO,
 
 		LIFE_BAR_FILL,
 		LIFE_BAR_LEFT,
