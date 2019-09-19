@@ -13,6 +13,8 @@
 
 #include "Scene.h"
 
+#include "InputHandler.h"
+
 class SceneGame : public Scene
 {
 	enum GEOMETRY_TYPE
@@ -111,6 +113,8 @@ private:
 	std::vector<Projectile*> projectiles;
 	std::vector<Spell*> spells;
 	std::vector<Enemy*> enemies;
+
+	InputHandler ih;
 
 	unsigned short selectedCard;
 

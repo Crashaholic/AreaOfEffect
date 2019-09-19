@@ -206,6 +206,14 @@ void SceneGame::Init()
 
 	player->GO->pos = { m_worldWidth / 2.f, m_worldHeight / 2.f, 0 };
 
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_FORWARD     )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_FORWARD);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_BACKWARD    )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_BACKWARD);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_LEFT        )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_LEFT);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.MOVE_RIGHT       )] = new KbKey(Application::GetInstance().usrsttngs.MOVE_RIGHT);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.SELECT_CARD_LEFT )] = new KbKey(Application::GetInstance().usrsttngs.SELECT_CARD_LEFT);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT)] = new KbKey(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT);
+	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.RESTOCK_DECK     )] = new KbKey(Application::GetInstance().usrsttngs.RESTOCK_DECK);
+
 }
 
 double RoundOff(double N, double n)
@@ -329,16 +337,16 @@ void SceneGame::Update(double dt_raw)
 	//then poll kb
 	if (!SkipKBYDirInput)
 	{
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD))
+		if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.MOVE_FORWARD, true))
 			player->MoveY_KB(1, dt);
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD))
+		if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.MOVE_BACKWARD, true))
 			player->MoveY_KB(0, dt);
 	}
 	if (!SkipKBXDirInput)
 	{
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT))
+		if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.MOVE_RIGHT, true))
 			player->MoveX_KB(1, dt);
-		if (Application::GetInstance().IsKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT))
+		if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.MOVE_LEFT, true))
 			player->MoveX_KB(0, dt);
 	}
 
@@ -372,31 +380,16 @@ void SceneGame::Update(double dt_raw)
 		SelectCard(0);
 	}
 
-	
-
-	static bool QPressed = false;
-	static bool EPressed = false;
-	if (!QPressed && Application::GetInstance().IsKeyPressed('Q'))
+	if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.SELECT_CARD_LEFT))
 	{
-		QPressed = true;
 		SelectCard(1);
 	}
-	else if (QPressed && !Application::GetInstance().IsKeyPressed('Q'))
-	{
-		QPressed = false;
-	}
 
-	if (!EPressed && Application::GetInstance().IsKeyPressed('E'))
+	if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT))
 	{
-		EPressed = true;
 		SelectCard(0);
 	}
-	else if (EPressed && !Application::GetInstance().IsKeyPressed('E'))
-	{
-		EPressed = false;
-	}
-
-	if (Application::GetInstance().IsKeyPressed('R'))
+	if (ih.GetKeyPressed(Application::GetInstance().usrsttngs.RESTOCK_DECK))
 	{
 		ReloadDeck();
 	}

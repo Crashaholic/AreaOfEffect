@@ -5,6 +5,8 @@
 #include "timer.h"
 #include "SettingsHandler.h"
 
+typedef struct GLFWwindow GLFWwindow;
+
 class Application
 {
 public:
@@ -21,6 +23,8 @@ public:
 	static void GetCursorPos(double *xpos, double *ypos);
 	static int GetWindowWidth();
 	static int GetWindowHeight();
+	
+	GLFWwindow* GetWindow();
 
 	GameUserSettings usrsttngs;
 
