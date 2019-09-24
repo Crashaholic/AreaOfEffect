@@ -41,7 +41,7 @@
     <ClCompile Include="Source\Player.cpp" />
     <ClCompile Include="Source\Resistances.cpp" />
     <ClCompile Include="Source\SceneGame.cpp" />
-    <ClCompile Include="Source\SettingsHandler.cpp" />
+    <ClCompile Include="Source\Handlers\SettingsHandler.cpp" />
     <ClCompile Include="Source\shader.cpp" />
     <ClCompile Include="Source\SoundEngine.cpp" />
     <ClCompile Include="Source\Spell.cpp" />
@@ -62,6 +62,7 @@
     <ClInclude Include="Source\GameObject.h" />
     <ClInclude Include="Source\GOManager.h" />
     <ClInclude Include="Source\gpch.h" />
+    <ClInclude Include="Source\Handlers\CardListHandler.h" />
     <ClInclude Include="Source\InputHandler.h" />
     <ClInclude Include="Source\Light.h" />
     <ClInclude Include="Source\LoadOBJ.h" />
@@ -74,7 +75,7 @@
     <ClInclude Include="Source\Resistances.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\SceneGame.h" />
-    <ClInclude Include="Source\SettingsHandler.h" />
+    <ClInclude Include="Source\Handlers\SettingsHandler.h" />
     <ClInclude Include="Source\shader.hpp" />
     <ClInclude Include="Source\SoundEngine.h" />
     <ClInclude Include="Source\Spell.h" />

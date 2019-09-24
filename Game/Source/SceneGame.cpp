@@ -87,21 +87,6 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::CARD_ELEMENT_COLD    ] = Load::TGA("Image//cold_ico.tga");
 	textures[TEXTURE_LIST::CARD_ELEMENT_LTNG    ] = Load::TGA("Image//ltng_ico.tga");
 	textures[TEXTURE_LIST::CARD_ELEMENT_HEAL    ] = Load::TGA("Image//heal_ico.tga");
-	textures[TEXTURE_LIST::CARD_POWER_1         ] = Load::TGA("Image//power1.tga");
-	textures[TEXTURE_LIST::CARD_POWER_2         ] = Load::TGA("Image//power2.tga");
-	textures[TEXTURE_LIST::CARD_POWER_3         ] = Load::TGA("Image//power3.tga");
-	textures[TEXTURE_LIST::CARD_POWER_4         ] = Load::TGA("Image//power4.tga");
-	textures[TEXTURE_LIST::CARD_POWER_5         ] = Load::TGA("Image//power5.tga");
-	textures[TEXTURE_LIST::CARD_POWER_6         ] = Load::TGA("Image//power6.tga");
-	textures[TEXTURE_LIST::CARD_POWER_7         ] = Load::TGA("Image//power7.tga");
-	textures[TEXTURE_LIST::CARD_POWER_8         ] = Load::TGA("Image//power8.tga");
-	textures[TEXTURE_LIST::CARD_POWER_9         ] = Load::TGA("Image//power9.tga");
-	textures[TEXTURE_LIST::CARD_POWER_10        ] = Load::TGA("Image//power10.tga");
-	textures[TEXTURE_LIST::CARD_POWER_11        ] = Load::TGA("Image//power11.tga");
-	textures[TEXTURE_LIST::CARD_POWER_12        ] = Load::TGA("Image//power12.tga");
-	textures[TEXTURE_LIST::CARD_POWER_13        ] = Load::TGA("Image//power13.tga");
-	textures[TEXTURE_LIST::CARD_POWER_14        ] = Load::TGA("Image//power14.tga");
-	textures[TEXTURE_LIST::CARD_POWER_15        ] = Load::TGA("Image//power15.tga");
 	textures[TEXTURE_LIST::CARD_INFO            ] = Load::TGA("Image//blk.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
@@ -122,7 +107,7 @@ void SceneGame::Init()
 	bLightEnabled = false;
 
 	m_speed = 1.f;
-
+	slowMoTimer = 3.f;
 	selectedCard = 2;
 
 	BaseProjectile.first = MeshBuilder::GenerateSpriteAnimation("proj", 1, 4);
@@ -253,7 +238,6 @@ void SceneGame::Update(double dt_raw)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 
-	static bool doNotPollMouse = false;
 	if (present == 1)
 	{
 		int axesCount;
@@ -264,14 +248,14 @@ void SceneGame::Update(double dt_raw)
 		{
 			if (Application::GetInstance().usrsttngs.cursorInvX) temp = -temp;
 			cursorGO->pos.x += (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensX;
-			doNotPollMouse = true;
+			skipPollMouse = true;
 		}
 		temp = (float)RoundOff((double)axes[3], 1);
 		if (temp > 0.0f || temp < 0.0f)
 		{
 			if (Application::GetInstance().usrsttngs.cursorInvY) temp = -temp;
 			cursorGO->pos.y -= (float)dt * temp * Application::GetInstance().usrsttngs.cursorSensY;
-			doNotPollMouse = true;
+			skipPollMouse = true;
 		}
 	}
 
@@ -281,10 +265,10 @@ void SceneGame::Update(double dt_raw)
 	if (vec3((float)a, (float)b, 1) != vec3(clickpos.x, clickpos.y, 1))
 	{
 		clickpos = vec3((float)a, (float)b);
-		doNotPollMouse = false;
+		skipPollMouse = false;
 	}
 
-	if (!doNotPollMouse)
+	if (!skipPollMouse)
 	{
 		float x = (2.0f * (float)a) / (float)Application::GetInstance().GetWindowWidth() - 1.0f;
 		float y = 1.0f - (2.0f * (float)b) / (float)Application::GetInstance().GetWindowHeight();
@@ -307,9 +291,6 @@ void SceneGame::Update(double dt_raw)
 		cursorGO->pos = InvView * cursorGO->pos;
 		cursorGO->pos += camera.position;
 	}
-
-		cursorGO->pos += player->GO->vel * (float)dt;
-
 
 	bool SkipKBXDirInput = false;
 	bool SkipKBYDirInput = false;
@@ -355,6 +336,10 @@ void SceneGame::Update(double dt_raw)
 		player->GO->sprites["MOVE_X_LEFT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 		player->GO->sprites["MOVE_X_RIGHT"].first->m_anim->Set(0, 3, 0.5f, true, true);
 	}
+
+	// used to keep the cursor stable
+	cursorGO->pos += player->GO->vel * (float)dt;
+
 	//TODO: FIND A WAY FOR CONTROLLER ANIMATION TIME DILATION (BASICALLY SLOWER MOVEMENT = BIGGER TIME NUMBER)
 
 	player->GO->activeSprite = player->GO->sprites["IDLE"];
@@ -369,6 +354,11 @@ void SceneGame::Update(double dt_raw)
 	else if (player->GO->vel.x < 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
 
+
+	if (skipPollMouse)
+		glfwSetInputMode(Application::GetInstance().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	else
+		glfwSetInputMode(Application::GetInstance().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
 
 	if (Application::GetInstance().scrollState == 1)
@@ -394,6 +384,17 @@ void SceneGame::Update(double dt_raw)
 		ReloadDeck();
 	}
 
+	static bool DoSlowMo = false;
+	static bool ControllerDoSlowMo = false;
+	if (Application::GetInstance().IsKeyPressed('F'))
+	{
+		DoSlowMo = true;
+	}
+	else
+	{
+		if (!ControllerDoSlowMo)
+			DoSlowMo = false;
+	}
 
 	if (present == 1)
 	{
@@ -444,6 +445,18 @@ void SceneGame::Update(double dt_raw)
 		{
 			PadXPressed = false;
 		}
+
+		static bool LTPressed = false;
+		if (!LTPressed && buttons[6] == GLFW_PRESS)
+		{
+			LTPressed = true;
+			DoSlowMo = ControllerDoSlowMo = true;
+		}
+		else if (LTPressed && buttons[6] == GLFW_RELEASE)
+		{
+			LTPressed = false;
+			DoSlowMo = ControllerDoSlowMo = false;
+		}
 	}
 
 	static bool bLButtonState = false;
@@ -470,6 +483,16 @@ void SceneGame::Update(double dt_raw)
 	}
 
 
+	if (DoSlowMo && slowMoTimer > 0.f)
+	{
+		m_speed = 0.5f;
+		slowMoTimer = Math::Max(slowMoTimer - 1.f * dt, (double)0);
+	}
+	else
+	{
+		m_speed = 1.0f;
+		slowMoTimer = Math::Min(slowMoTimer + 0.1f * dt, (double)3);
+	}
 
 	//Physics Simulation Section
 	fps = (float)(1.f / dt_raw);
@@ -709,6 +732,10 @@ void SceneGame::Render()
 		RenderMesh(meshList[GEO_AXES], false);
 	modelStack.PopMatrix();
 
+	//=============
+	//     UI
+	//=============
+
 	modelStack.PushMatrix();
 		modelStack.Translate(cursorGO->pos.x, cursorGO->pos.y, 9);
 		modelStack.Scale(3.5f, 3.5f, 3.5f);
@@ -716,10 +743,6 @@ void SceneGame::Render()
 		RenderMesh(dynamic_cast<Mesh*>(cursorGO->activeSprite.first), false);
 		cursorGO->activeSprite.first->textureID = 0;
 	modelStack.PopMatrix();
-
-	//=============
-	//     UI
-	//=============
 
 	std::stringstream fpsCounter;
 	fpsCounter << (int)fps;
@@ -848,7 +871,7 @@ void SceneGame::Render()
 			meshList[GEO_BAR]->textureID = 0;
 		modelStack.PopMatrix();
 		modelStack.PushMatrix();
-			modelStack.Translate(-6.f, 3.5f, 1);
+			modelStack.Translate(-5.75f, 3.25f, 1);
 			modelStack.Scale(1.5f, 1.5f, 1);
 			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
 				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_LEFT];
@@ -858,7 +881,7 @@ void SceneGame::Render()
 			meshList[GEO_QUAD]->textureID = 0;
 		modelStack.PopMatrix();
 		modelStack.PushMatrix();
-			modelStack.Translate(6.f, 3.5f, 1);
+			modelStack.Translate(5.75f, 3.25f, 1);
 			modelStack.Scale(1.5f, 1.5f, 1);
 			if (Application::GetInstance().usrsttngs.lifebarDecoration == 0)
 				meshList[GEO_QUAD]->textureID = textures[TEXTURE_LIST::LIFE_BAR_RIGHT];
@@ -878,6 +901,12 @@ void SceneGame::Render()
 			modelStack.Translate(-6.f, 1.5f, 0);
 			modelStack.Scale(1.5f, 1.5f, 1.f);
 			RenderText(meshList[GEO_TEXT], playerHpMax.str(), { 1, 1, 1 });
+		modelStack.PopMatrix();
+
+		modelStack.PushMatrix();
+			modelStack.Translate(-5.f, 2.75f, 0);
+			modelStack.Scale(slowMoTimer / 3.f * 10.f, 0.5f, 2);
+			RenderMesh(meshList[GEO_BAR], false);
 		modelStack.PopMatrix();
 
 		// CARD BAR

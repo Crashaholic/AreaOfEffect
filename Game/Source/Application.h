@@ -3,7 +3,7 @@
 #define APPLICATION_H
 
 #include "timer.h"
-#include "SettingsHandler.h"
+#include "Handlers/SettingsHandler.h"
 
 typedef struct GLFWwindow GLFWwindow;
 

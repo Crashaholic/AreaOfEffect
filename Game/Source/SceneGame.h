@@ -116,6 +116,10 @@ private:
 
 	InputHandler ih;
 
+	float slowMoTimer;
+
+	bool skipPollMouse = false;
+
 	unsigned short selectedCard;
 
 	float m_speed;

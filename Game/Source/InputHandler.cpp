@@ -49,6 +49,7 @@ bool KbKey::IsPressed(bool JustDoIt)
 	{
 		return ((GetAsyncKeyState(associatedKey) & 0x8001) != 0);
 	}
+	return false;
 }
 
 void KbKey::SetAssociatedKey(unsigned short k)
