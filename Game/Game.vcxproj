@@ -63,6 +63,7 @@
     <ClInclude Include="Source\GOManager.h" />
     <ClInclude Include="Source\gpch.h" />
     <ClInclude Include="Source\Handlers\CardListHandler.h" />
+    <ClInclude Include="Source\Handlers\SpellFileVersion.h" />
     <ClInclude Include="Source\InputHandler.h" />
     <ClInclude Include="Source\Light.h" />
     <ClInclude Include="Source\LoadOBJ.h" />

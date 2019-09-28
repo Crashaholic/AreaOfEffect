@@ -486,12 +486,12 @@ void SceneGame::Update(double dt_raw)
 	if (DoSlowMo && slowMoTimer > 0.f)
 	{
 		m_speed = 0.5f;
-		slowMoTimer = Math::Max(slowMoTimer - 1.f * dt, (double)0);
+		slowMoTimer = Math::Max(float(slowMoTimer - 1.f * dt), (float)0);
 	}
 	else
 	{
 		m_speed = 1.0f;
-		slowMoTimer = Math::Min(slowMoTimer + 0.1f * dt, (double)3);
+		slowMoTimer = Math::Min(float(slowMoTimer + 0.1f * dt), (float)3);
 	}
 
 	//Physics Simulation Section
@@ -613,10 +613,10 @@ void SceneGame::SelectCard(bool up)
 void SceneGame::ReloadDeck()
 {
 	player->currentDeck = player->originalDeck;
-
-	player->currentHand.push_back(player->currentDeck.DrawRandom());
-	player->currentHand.push_back(player->currentDeck.DrawRandom());
-	player->currentHand.push_back(player->currentDeck.DrawRandom());
+	while (player->currentHand.size() < 3)
+	{
+		player->currentHand.push_back(player->currentDeck.DrawRandom());
+	}
 }
 
 void SceneGame::RenderText(Mesh* mesh, std::string text, Color color)

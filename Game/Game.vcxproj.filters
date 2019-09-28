@@ -194,5 +194,8 @@
     <ClInclude Include="Source\Handlers\CardListHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Handlers\SpellFileVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
