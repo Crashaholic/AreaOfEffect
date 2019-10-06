@@ -29,7 +29,7 @@ GameObject* GOManager::FetchGO()
 	}
 	for (int i = 0; i < 10; i++)
 	{
-		GOContainer.push_back(new GameObject);
+		GOContainer.push_back(new GameObject());
 	}
 
 	return FetchGO();

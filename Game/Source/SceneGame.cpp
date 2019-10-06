@@ -3,6 +3,10 @@
 #include "Application.h"
 #include <iomanip>
 
+#define CircleCollision(a, b) (b->GO->pos.x - a->GO->pos.x) * (b->GO->pos.x - a->GO->pos.x) + \
+                              (b->GO->pos.y - a->GO->pos.y) * (b->GO->pos.y - a->GO->pos.y) <= \
+                              (b->GO->scale / 2.0f + a->GO->scale / 2.0f) * (b->GO->scale / 2.0f + a->GO->scale / 2.0f)
+
 SceneGame::SceneGame()
 {
 }
@@ -78,6 +82,8 @@ void SceneGame::Init()
 	meshList[GEO_QUAD]->transparency = 0.5f;
 	meshList[GEO_BAR]->transparency = 0.5f;
 
+	blankSprite = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+
 	textures[TEXTURE_LIST::CURSOR_NORMAL        ] = Load::TGA("Image//cursor.tga");
 	textures[TEXTURE_LIST::CURSOR_CLICKED       ] = Load::TGA("Image//cursor_clicked.tga");
 	textures[TEXTURE_LIST::CARD_SELECTOR        ] = Load::TGA("Image//selector.tga");
@@ -88,6 +94,7 @@ void SceneGame::Init()
 	textures[TEXTURE_LIST::CARD_ELEMENT_LTNG    ] = Load::TGA("Image//ltng_ico.tga");
 	textures[TEXTURE_LIST::CARD_ELEMENT_HEAL    ] = Load::TGA("Image//heal_ico.tga");
 	textures[TEXTURE_LIST::CARD_INFO            ] = Load::TGA("Image//blk.tga");
+	textures[TEXTURE_LIST::SLOW_BAR             ] = Load::TGA("Image//gradbar.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_FILL        ] = Load::TGA("Image//life_mid.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_LEFT        ] = Load::TGA("Image//life_left.tga");
 	textures[TEXTURE_LIST::LIFE_BAR_RIGHT       ] = Load::TGA("Image//life_right.tga");
@@ -199,6 +206,21 @@ void SceneGame::Init()
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT)] = new KbKey(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT);
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.RESTOCK_DECK     )] = new KbKey(Application::GetInstance().usrsttngs.RESTOCK_DECK);
 
+	enemies.push_back(new Enemy());
+	enemies[0]->Init(GOMan->FetchGO());
+	enemies[0]->GO->pos.z = 4;
+	enemies[0]->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+	enemies[0]->GO->sprites["IDLE"].second = Load::TGA("Image//range.tga");
+	enemies[0]->GO->activeSprite = enemies[0]->GO->sprites["IDLE"];
+	enemies[0]->GO->scale = 5;
+	enemies[0]->personalDmg = {168, 0, 0, 0};
+	enemies[0]->maxSpeed = 5.f;
+	enemies[0]->speed = 20.f;
+	enemies[0]->health = 1.f;
+	enemies[0]->maxHealth = 1.f;
+	enemies[0]->resistance = { 0, 0, 0, 0 };
+	enemies[0]->t.StartTimer();
+
 }
 
 double RoundOff(double N, double n)
@@ -231,6 +253,10 @@ double RoundOff(double N, double n)
 void SceneGame::Update(double dt_raw)
 {
 	double dt = m_speed * dt_raw;
+
+	//Physics Simulation Section
+	fps = (float)(1.f / dt_raw);
+
 	//Keyboard Section
 	if(Application::GetInstance().IsKeyPressed('1') && Application::GetInstance().IsKeyPressed(VK_SHIFT))
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -353,6 +379,8 @@ void SceneGame::Update(double dt_raw)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_RIGHT"];
 	else if (player->GO->vel.x < 0)
 		player->GO->activeSprite = player->GO->sprites["MOVE_X_LEFT"];
+
+	player->GO->scale;
 
 
 	if (skipPollMouse)
@@ -486,16 +514,17 @@ void SceneGame::Update(double dt_raw)
 	if (DoSlowMo && slowMoTimer > 0.f)
 	{
 		m_speed = 0.5f;
-		slowMoTimer = Math::Max(slowMoTimer - 1.f * dt, (double)0);
+		slowMoTimer = Math::Max(float(slowMoTimer - 1.f * dt), (float)0);
 	}
 	else
 	{
 		m_speed = 1.0f;
-		slowMoTimer = Math::Min(slowMoTimer + 0.1f * dt, (double)3);
+		slowMoTimer = Math::Min(float(slowMoTimer + 0.1f * dt), (float)3);
 	}
 
-	//Physics Simulation Section
-	fps = (float)(1.f / dt_raw);
+	/*==============================================\
+	|              ENTITY UPDATE LOOPS              |
+	\==============================================*/
 
 	player->GO->activeSprite.first->Update(dt);
 
@@ -526,12 +555,55 @@ void SceneGame::Update(double dt_raw)
 		std::setprecision(6);
 	}
 
+	for (size_t i = 0; i < enemies.size(); ++i)
+	{
+		if (enemies[i]->markedForDeletion)
+		{
+			delete enemies[i];
+			enemies.erase(enemies.begin() + i);
+			continue;
+		}
+
+		//std::cout << "enemy hp: " << enemies[i]->health << '\n';
+
+		if (CircleCollision(player, enemies[i]))
+		{
+			if (enemies[i]->t.Lap() > 1)
+			{
+				player->TakeDamage(enemies[i]->personalDmg, dt);
+				enemies[i]->t.StartTimer();
+				if (!enemies[i]->GO->vel.IsZero())
+					enemies[i]->GO->vel -= 100.f * (float)dt;
+			}
+		}
+		else
+		{
+			enemies[i]->GO->vel += (player->GO->pos - enemies[i]->GO->pos).Normalized() * enemies[i]->speed * (float)dt;
+			enemies[i]->GO->vel.z = 0;
+			enemies[i]->GO->vel.x = min(enemies[i]->GO->vel.x, enemies[i]->maxSpeed);
+			enemies[i]->GO->vel.y = min(enemies[i]->GO->vel.y, enemies[i]->maxSpeed);
+		}
+
+		if (enemies[i]->health <= 0.0f)
+		{
+			enemies[i]->GO->active = false;
+			enemies[i]->markedForDeletion = true;
+		}
+	}
+
 	for (size_t i = 0; i < spells.size(); ++i)
 	{
-
 		if (spells[i]->timer.Lap() >= spells[i]->delay)
 		{
 			spells[i]->DamageNearby(player, dt);
+		}
+		for (size_t i = 0; i < enemies.size(); ++i)
+		{
+			if (spells[i]->timer.Lap() >= spells[i]->delay)
+			{
+				if (!enemies[i]->markedForDeletion)
+					spells[i]->DamageNearby(enemies[i], dt);
+			}
 		}
 
 		if (spells[i]->timer.Lap() >= spells[i]->duration + spells[i]->delay)
@@ -607,7 +679,7 @@ void SceneGame::FireCard()
 
 void SceneGame::SelectCard(bool up)
 {
-	selectedCard = Math::Wrap((unsigned short)(selectedCard + 1 - 2 * up), (unsigned short)1, (unsigned short)player->currentHand.size());
+	selectedCard = Math::Wrap((unsigned short)(selectedCard + 1 - 2 * up), (unsigned short)1, (unsigned short)((unsigned short)player->currentHand.size() > 0 ? (unsigned short)player->currentHand.size() : 1));
 }
 
 void SceneGame::ReloadDeck()
@@ -715,6 +787,11 @@ void SceneGame::Render()
 	
 	for (size_t i = 0; i < GOMan->GOContainer.size(); i++)
 	{
+		GameObject ColliderDisplay;
+		ColliderDisplay.sprites["circle"].first = blankSprite;
+		ColliderDisplay.sprites["circle"].second = BaseSpell.second;
+		ColliderDisplay.sprites["circle"].first->textureID = ColliderDisplay.sprites["circle"].second;
+
 		if (GOMan->GOContainer[i]->active)
 		{
 			modelStack.PushMatrix();
@@ -722,6 +799,7 @@ void SceneGame::Render()
 				modelStack.Scale(GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale);
 				GOMan->GOContainer[i]->activeSprite.first->textureID = GOMan->GOContainer[i]->activeSprite.second;
 				RenderMesh(GOMan->GOContainer[i]->activeSprite.first, false);
+				RenderMesh(ColliderDisplay.sprites["circle"].first, false);
 				GOMan->GOContainer[i]->activeSprite.first->textureID = 0;
 			modelStack.PopMatrix();
 		}
@@ -749,7 +827,7 @@ void SceneGame::Render()
 	std::setprecision(6);
 
 	std::stringstream playerHpCurr;
-	playerHpCurr << (int)player->health;
+	playerHpCurr << (int)ceil(player->health);
 
 	std::stringstream playerHpMax;
 	playerHpMax << (int)player->maxHealth;
@@ -906,8 +984,10 @@ void SceneGame::Render()
 		modelStack.PushMatrix();
 			modelStack.Translate(-5.f, 2.75f, 0);
 			modelStack.Scale(slowMoTimer / 3.f * 10.f, 0.5f, 2);
+			meshList[GEO_BAR]->textureID = textures[TEXTURE_LIST::SLOW_BAR];
 			RenderMesh(meshList[GEO_BAR], false);
-		modelStack.PopMatrix();
+			meshList[GEO_BAR]->textureID = 0;
+			modelStack.PopMatrix();
 
 		// CARD BAR
 		modelStack.PushMatrix();
@@ -1063,6 +1143,14 @@ void SceneGame::Exit()
 		if (go)
 			delete go;
 		spells.pop_back();
+	}
+
+	while (enemies.size() > 0)
+	{
+		Enemy* go = enemies.back();
+		if (go)
+			delete go;
+		enemies.pop_back();
 	}
 
 	//std::for_each(projectiles.begin(), projectiles.end(), delete_pointer_element<Projectile*>());

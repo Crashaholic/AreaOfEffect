@@ -41,23 +41,9 @@ class SceneGame : public Scene
 		CARD_ELEMENT_LTNG,
 		CARD_ELEMENT_HEAL,
 
-		CARD_POWER_1,
-		CARD_POWER_2,
-		CARD_POWER_3,
-		CARD_POWER_4,
-		CARD_POWER_5,
-		CARD_POWER_6,
-		CARD_POWER_7,
-		CARD_POWER_8,
-		CARD_POWER_9,
-		CARD_POWER_10,
-		CARD_POWER_11,
-		CARD_POWER_12,
-		CARD_POWER_13,
-		CARD_POWER_14,
-		CARD_POWER_15,
-
 		CARD_INFO,
+
+		SLOW_BAR,
 
 		LIFE_BAR_FILL,
 		LIFE_BAR_LEFT,
@@ -93,6 +79,8 @@ private:
 	Shader defaultShader;
 	GOManager* GOMan;
 	Camera camera;
+
+	SpriteAnimation* blankSprite;
 
 	MS modelStack;
 	MS viewStack;

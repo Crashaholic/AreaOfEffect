@@ -10,8 +10,8 @@ struct Entity
 {
 	GameObject* GO;
 
-	Entity() {};
-	Entity(GameObject* GO) { this->GO = GO; };
+	Entity() : markedForDeletion(false) {};
+	Entity(GameObject* GO) : markedForDeletion(false), health(1), maxHealth(1), speed(1), maxSpeed(1) { this->GO = GO; };
 	~Entity();
 
 	Resistances resistance;
@@ -28,6 +28,8 @@ struct Entity
 	float maxHealth;
 	float speed;
 	float maxSpeed;
+
+	bool markedForDeletion;
 
 };
 

@@ -1,6 +1,5 @@
 #pragma once
 #include "gpch.h"
-
 #include "Entity.h"
 
 struct Enemy : public Entity
@@ -8,5 +7,8 @@ struct Enemy : public Entity
 	Enemy();
 	virtual void Init(GameObject* go) override;
 	virtual void Update(double dt) override;
+	
+	Damage personalDmg;
+	Timer t;
 };
 
