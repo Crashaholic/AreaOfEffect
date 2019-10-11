@@ -103,6 +103,7 @@ private:
 	std::vector<Enemy*> enemies;
 
 	InputHandler ih;
+	Timer whenToSpawn;
 
 	float slowMoTimer;
 

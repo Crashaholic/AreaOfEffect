@@ -205,22 +205,8 @@ void SceneGame::Init()
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.SELECT_CARD_LEFT )] = new KbKey(Application::GetInstance().usrsttngs.SELECT_CARD_LEFT);
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT)] = new KbKey(Application::GetInstance().usrsttngs.SELECT_CARD_RIGHT);
 	ih.KeyStorage[unsigned short(Application::GetInstance().usrsttngs.RESTOCK_DECK     )] = new KbKey(Application::GetInstance().usrsttngs.RESTOCK_DECK);
-
-	enemies.push_back(new Enemy());
-	enemies[0]->Init(GOMan->FetchGO());
-	enemies[0]->GO->pos.z = 4;
-	enemies[0]->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
-	enemies[0]->GO->sprites["IDLE"].second = Load::TGA("Image//range.tga");
-	enemies[0]->GO->activeSprite = enemies[0]->GO->sprites["IDLE"];
-	enemies[0]->GO->scale = 5;
-	enemies[0]->personalDmg = {168, 0, 0, 0};
-	enemies[0]->maxSpeed = 5.f;
-	enemies[0]->speed = 20.f;
-	enemies[0]->health = 1.f;
-	enemies[0]->maxHealth = 1.f;
-	enemies[0]->resistance = { 0, 0, 0, 0 };
-	enemies[0]->t.StartTimer();
-
+	
+	whenToSpawn.StartTimer();
 }
 
 double RoundOff(double N, double n)
@@ -522,6 +508,26 @@ void SceneGame::Update(double dt_raw)
 		slowMoTimer = Math::Min(float(slowMoTimer + 0.1f * dt), (float)3);
 	}
 
+	if (whenToSpawn.Lap() > 3)
+	{
+		whenToSpawn.StartTimer();
+
+		enemies.push_back(new Enemy());
+		enemies.back()->Init(GOMan->FetchGO());
+		enemies.back()->GO->pos.z = 4;
+		enemies.back()->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
+		enemies.back()->GO->sprites["IDLE"].second = Load::TGA("Image//range.tga");
+		enemies.back()->GO->activeSprite = enemies[0]->GO->sprites["IDLE"];
+		enemies.back()->GO->scale = 5;
+		enemies.back()->personalDmg = { 168, 0, 0, 0 };
+		enemies.back()->maxSpeed = 5.f;
+		enemies.back()->speed = 20.f;
+		enemies.back()->health = 1.f;
+		enemies.back()->maxHealth = 1.f;
+		enemies.back()->resistance = { 0, 0, 0, 0 };
+		enemies.back()->t.StartTimer();
+	}
+
 	/*==============================================\
 	|              ENTITY UPDATE LOOPS              |
 	\==============================================*/
@@ -597,12 +603,12 @@ void SceneGame::Update(double dt_raw)
 		{
 			spells[i]->DamageNearby(player, dt);
 		}
-		for (size_t i = 0; i < enemies.size(); ++i)
+		for (size_t j = 0; j < enemies.size(); ++j)
 		{
 			if (spells[i]->timer.Lap() >= spells[i]->delay)
 			{
-				if (!enemies[i]->markedForDeletion)
-					spells[i]->DamageNearby(enemies[i], dt);
+				if (!enemies[j]->markedForDeletion)
+					spells[i]->DamageNearby(enemies[j], dt);
 			}
 		}
 
