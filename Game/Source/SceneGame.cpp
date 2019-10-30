@@ -133,9 +133,9 @@ void SceneGame::Init()
 	player->GO->mass = 10;
 	player->GO->scale = 3;
 	
-	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("player_idle", 1, 4);
+	player->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("player_idle", 1, 2);
 	player->GO->sprites["IDLE"].first->m_anim = new Animation();
-	player->GO->sprites["IDLE"].first->m_anim->Set(0, 3, 2.f, true, true);
+	player->GO->sprites["IDLE"].first->m_anim->Set(0, 1, 2.f, true, true);
 	player->GO->sprites["IDLE"].second = Load::TGA("Image//player_idle.tga");
 	
 	player->GO->sprites["MOVE_X_LEFT"].first = MeshBuilder::GenerateSpriteAnimation("player_move_x_left", 1, 4);
@@ -157,7 +157,7 @@ void SceneGame::Init()
 	temp1.delay = 0.0f;
 	temp1.radius = 1;
 	temp1.duration = 5;
-	temp1.dmg = Damage{0, 1, 0, 0};
+	temp1.dmg = Damage{1, 0, 0, 0};
 
 	player->resistance.Phys = 75.f;
 	player->resistance.Fire = 75.f;
@@ -168,12 +168,13 @@ void SceneGame::Init()
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
+	temp1.dmg = Damage{ 0, 1, 0, 0 };
+	temp1.radius = 5;
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	temp1.dmg = Damage(0, 0, 1, 0);
-	temp1.radius = 5;
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
 	player->currentDeck.deck.push_back(temp1);
@@ -515,8 +516,8 @@ void SceneGame::Update(double dt_raw)
 		enemies.push_back(new Enemy());
 		enemies.back()->Init(GOMan->FetchGO());
 		enemies.back()->GO->pos.z = 4;
-		enemies.back()->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 1);
-		enemies.back()->GO->sprites["IDLE"].second = Load::TGA("Image//range.tga");
+		enemies.back()->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 2);
+		enemies.back()->GO->sprites["IDLE"].second = Load::TGA("Image//ghost_idle.tga");
 		enemies.back()->GO->activeSprite = enemies[0]->GO->sprites["IDLE"];
 		enemies.back()->GO->scale = 5;
 		enemies.back()->personalDmg = { 168, 0, 0, 0 };
