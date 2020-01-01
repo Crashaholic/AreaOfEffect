@@ -13,7 +13,7 @@
 
 #include "Scene.h"
 
-#include "InputHandler.h"
+#include "Handlers/InputHandler.h"
 
 class SceneGame : public Scene
 {

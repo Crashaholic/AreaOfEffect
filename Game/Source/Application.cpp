@@ -6,9 +6,10 @@
 #include <stdlib.h>
 
 #include "SceneGame.h"
+#include "Handlers/SceneHandler.h"
 
 GLFWwindow* m_window;
-const unsigned char FPS = 60; // FPS of this game
+const unsigned char FPS = INT_MAX; // FPS of this game
 const unsigned int frameTime = 1000 / FPS; // time for each frame
 int m_width, m_height;
 
@@ -148,19 +149,32 @@ void Application::Init()
 #else
 	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 #endif
+
+	SceneHandler::GetInstance()->AddScene<SceneGame>();
 }
 
 void Application::Run()
 {
 	//Main Loop
-	std::unique_ptr<Scene> scene = std::make_unique<SceneGame>();
-	scene->Init();
+	//std::unique_ptr<Scene> scene = std::make_unique<SceneGame>();
+	//scene->Init();
+
+	try
+	{
+		SceneHandler::GetInstance()->StartUpScene<SceneGame>();
+	}
+	catch (SceneNotRegistered e)
+	{
+		std::cout << e.what() << '\n';
+		__debugbreak();
+	}
 
 	m_timer.startTimer();    // Start timer to calculate how long it takes to render this frame
 	while (!glfwWindowShouldClose(m_window) && !IsKeyPressed(VK_ESCAPE))
 	{
-		scene->Update(m_timer.getElapsedTime());
-		scene->Render();
+		//scene->Update(m_timer.getElapsedTime());
+		//scene->Render();
+		SceneHandler::GetInstance()->RunScene(m_timer.getElapsedTime());
 		//Swap buffers
 		glfwSwapBuffers(m_window);
 		//Get and organize events, like keyboard and mouse input, window resizing, etc...
@@ -170,7 +184,8 @@ void Application::Run()
 
 
 	} //Check if the ESC key had been pressed or if the window had been closed
-	scene->Exit();
+	//scene->Exit();
+	SceneHandler::GetInstance()->CloseScene();
 }
 
 void Application::Exit()

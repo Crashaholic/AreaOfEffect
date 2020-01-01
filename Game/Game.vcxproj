@@ -32,7 +32,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">gpch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\InputHandler.cpp" />
+    <ClCompile Include="Source\Handlers\InputHandler.cpp" />
     <ClCompile Include="Source\LoadOBJ.cpp" />
     <ClCompile Include="Source\LoadTGA.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -42,6 +42,7 @@
     <ClCompile Include="Source\Resistances.cpp" />
     <ClCompile Include="Source\SceneGame.cpp" />
     <ClCompile Include="Source\Handlers\SettingsHandler.cpp" />
+    <ClCompile Include="Source\SceneMainMenu.cpp" />
     <ClCompile Include="Source\shader.cpp" />
     <ClCompile Include="Source\SoundEngine.cpp" />
     <ClCompile Include="Source\Spell.cpp" />
@@ -65,7 +66,9 @@
     <ClInclude Include="Source\GOManager.h" />
     <ClInclude Include="Source\gpch.h" />
     <ClInclude Include="Source\Handlers\CardListHandler.h" />
-    <ClInclude Include="Source\InputHandler.h" />
+    <ClInclude Include="Source\Handlers\InputHandler.h" />
+    <ClInclude Include="Source\Handlers\SceneHandler.h" />
+    <ClInclude Include="Source\SceneMainMenu.h" />
     <ClInclude Include="Source\Light.h" />
     <ClInclude Include="Source\LoadOBJ.h" />
     <ClInclude Include="Source\LoadTGA.h" />

@@ -1,4 +1,7 @@
+#include "gpch.h"
 #include "State.h"
+
+
 
 State::State(const std::string & stateID)
 	: m_stateID(stateID)

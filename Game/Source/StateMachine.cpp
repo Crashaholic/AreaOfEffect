@@ -1,3 +1,4 @@
+#include "gpch.h"
 #include "StateMachine.h"
 
 StateMachine::StateMachine()

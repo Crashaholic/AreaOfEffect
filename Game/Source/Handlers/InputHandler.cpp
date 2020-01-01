@@ -1,6 +1,6 @@
 #include "gpch.h"
 #include "InputHandler.h"
-#include "Application.h"
+#include "../Application.h"
 
 KbKey::KbKey()
 	: pressed(false)

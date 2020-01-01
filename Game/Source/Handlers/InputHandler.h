@@ -1,5 +1,5 @@
 #pragma once
-#include "gpch.h"
+#include "../gpch.h"
 #include <functional>
 
 class KbKey // slightly more unique name incase of conflicts

@@ -76,7 +76,7 @@ void SceneGame::Init()
 	meshList[GEO_QUAD] = MeshBuilder::GenerateQuad("quad", Color(1, 1, 1), 1);
 	meshList[GEO_BAR]  = MeshBuilder::GenerateBar("bar", Color(1, 1, 1), 1);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
-	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga", false);
+	meshList[GEO_TEXT]->textureID = LoadTGA("Image//couriernew.tga");
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
 
 	meshList[GEO_QUAD]->transparency = 0.5f;
@@ -210,7 +210,7 @@ void SceneGame::Init()
 	whenToSpawn.StartTimer();
 }
 
-double RoundOff(double N, double n)
+inline double RoundOff(double N, double n)
 {
 	int h;
 	double b, c, d, e, i, j, m, f;
@@ -839,6 +839,9 @@ void SceneGame::Render()
 	std::stringstream playerHpMax;
 	playerHpMax << (int)player->maxHealth;
 
+	std::stringstream playerHp;
+	playerHp << playerHpCurr.str() << '/' << playerHpMax.str();
+
 	viewStack.LoadIdentity();
 	// Top Left
 	modelStack.PushMatrix();
@@ -979,14 +982,20 @@ void SceneGame::Render()
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 5.f, 0);
 			modelStack.Scale(1.5f, 1.5f, 1.f);
-			RenderText(meshList[GEO_TEXT], playerHpCurr.str(), { 1, 1, 1 });
+			RenderText(meshList[GEO_TEXT], playerHp.str(), { 1, 1, 1 });
 		modelStack.PopMatrix();
 
-		modelStack.PushMatrix();
-			modelStack.Translate(-6.f, 1.5f, 0);
-			modelStack.Scale(1.5f, 1.5f, 1.f);
-			RenderText(meshList[GEO_TEXT], playerHpMax.str(), { 1, 1, 1 });
-		modelStack.PopMatrix();
+		//modelStack.PushMatrix();
+		//	modelStack.Translate(-6.f, 5.f, 0);
+		//	modelStack.Scale(1.5f, 1.5f, 1.f);
+		//	RenderText(meshList[GEO_TEXT], playerHpCurr.str(), { 1, 1, 1 });
+		//modelStack.PopMatrix();
+
+		//modelStack.PushMatrix();
+		//	modelStack.Translate(-6.f, 1.5f, 0);
+		//	modelStack.Scale(1.5f, 1.5f, 1.f);
+		//	RenderText(meshList[GEO_TEXT], playerHpMax.str(), { 1, 1, 1 });
+		//modelStack.PopMatrix();
 
 		modelStack.PushMatrix();
 			modelStack.Translate(-5.f, 2.75f, 0);
