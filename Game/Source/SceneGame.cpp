@@ -517,6 +517,7 @@ void SceneGame::Update(double dt_raw)
 		enemies.back()->Init(GOMan->FetchGO());
 		enemies.back()->GO->pos.z = 4;
 		enemies.back()->GO->sprites["IDLE"].first = MeshBuilder::GenerateSpriteAnimation("a", 1, 2);
+		//enemies.back()->GO->sprites["IDLE"].first->m_anim = new Animation();
 		enemies.back()->GO->sprites["IDLE"].second = Load::TGA("Image//ghost_idle.tga");
 		enemies.back()->GO->activeSprite = enemies[0]->GO->sprites["IDLE"];
 		enemies.back()->GO->scale = 5;
@@ -564,7 +565,7 @@ void SceneGame::Update(double dt_raw)
 
 	for (size_t i = 0; i < enemies.size(); ++i)
 	{
-		enemies[i]->GO->activeSprite.first->Update(dt);
+		//enemies[i]->GO->activeSprite.first->Update(dt);
 		if (enemies[i]->markedForDeletion)
 		{
 			delete enemies[i];
