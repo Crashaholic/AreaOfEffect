@@ -564,6 +564,7 @@ void SceneGame::Update(double dt_raw)
 
 	for (size_t i = 0; i < enemies.size(); ++i)
 	{
+		enemies[i]->GO->activeSprite.first->Update(dt);
 		if (enemies[i]->markedForDeletion)
 		{
 			delete enemies[i];
@@ -636,6 +637,7 @@ void SceneGame::Update(double dt_raw)
 		if (!GOMan->GOContainer[i]->vel.IsZero() && !GOMan->GOIsHookedOnByClass(i, Projectile))
 		{
 			vec3 friction = (0.0075f * GOMan->GOContainer[i]->mass * vec3(0, -9.8f, 0)).Length() * GOMan->GOContainer[i]->vel.Normalized() * (float) dt * 100;
+			//vec3 friction = (float) dt * 100;
 
 			GOMan->GOContainer[i]->vel.x = Math::Clamp(GOMan->GOContainer[i]->vel.x - friction.x, GOMan->GOContainer[i]->vel.x > 0 ? 0 : GOMan->GOContainer[i]->vel.x, GOMan->GOContainer[i]->vel.x < 0 ? 0 : GOMan->GOContainer[i]->vel.x);
 			GOMan->GOContainer[i]->vel.y = Math::Clamp(GOMan->GOContainer[i]->vel.y - friction.y, GOMan->GOContainer[i]->vel.y > 0 ? 0 : GOMan->GOContainer[i]->vel.y, GOMan->GOContainer[i]->vel.y < 0 ? 0 : GOMan->GOContainer[i]->vel.y);
@@ -794,10 +796,10 @@ void SceneGame::Render()
 	
 	for (size_t i = 0; i < GOMan->GOContainer.size(); i++)
 	{
-		GameObject ColliderDisplay;
-		ColliderDisplay.sprites["circle"].first = blankSprite;
-		ColliderDisplay.sprites["circle"].second = BaseSpell.second;
-		ColliderDisplay.sprites["circle"].first->textureID = ColliderDisplay.sprites["circle"].second;
+		//GameObject ColliderDisplay;
+		//ColliderDisplay.sprites["circle"].first = blankSprite;
+		//ColliderDisplay.sprites["circle"].second = BaseSpell.second;
+		//ColliderDisplay.sprites["circle"].first->textureID = ColliderDisplay.sprites["circle"].second;
 
 		if (GOMan->GOContainer[i]->active)
 		{
@@ -806,7 +808,7 @@ void SceneGame::Render()
 				modelStack.Scale(GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale, GOMan->GOContainer[i]->scale);
 				GOMan->GOContainer[i]->activeSprite.first->textureID = GOMan->GOContainer[i]->activeSprite.second;
 				RenderMesh(GOMan->GOContainer[i]->activeSprite.first, false);
-				RenderMesh(ColliderDisplay.sprites["circle"].first, false);
+				//RenderMesh(ColliderDisplay.sprites["circle"].first, false);
 				GOMan->GOContainer[i]->activeSprite.first->textureID = 0;
 			modelStack.PopMatrix();
 		}
@@ -848,7 +850,7 @@ void SceneGame::Render()
 		modelStack.Translate(-40, 40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 		modelStack.PushMatrix();
 			modelStack.Translate(2, -2, 0);
-			modelStack.Scale(2, 2, 2);
+			modelStack.Scale(1, 1, 1);
 			RenderText(meshList[GEO_TEXT], fpsCounter.str() , {1, 1, 1});
 		modelStack.PopMatrix();
 	modelStack.PopMatrix();
@@ -939,7 +941,7 @@ void SceneGame::Render()
 		}
 	modelStack.PopMatrix();
 
-	//// Bot Left
+	// Bot Left
 	//modelStack.PushMatrix();
 	//	modelStack.Translate(-40, -40 / (float)Application::GetInstance().GetWindowWidth() * (float)Application::GetInstance().GetWindowHeight(), 5);
 	//	modelStack.PushMatrix();
@@ -981,7 +983,7 @@ void SceneGame::Render()
 
 		modelStack.PushMatrix();
 			modelStack.Translate(-6.f, 5.f, 0);
-			modelStack.Scale(1.5f, 1.5f, 1.f);
+			modelStack.Scale(1.f, 1.f, 1.f);
 			RenderText(meshList[GEO_TEXT], playerHp.str(), { 1, 1, 1 });
 		modelStack.PopMatrix();
 

@@ -6,10 +6,11 @@
 #include <stdlib.h>
 
 #include "SceneGame.h"
+#include "SceneMainMenu.h"
 #include "Handlers/SceneHandler.h"
 
 GLFWwindow* m_window;
-const unsigned char FPS = INT_MAX; // FPS of this game
+const unsigned char FPS = 60; // FPS of this game
 const unsigned int frameTime = 1000 / FPS; // time for each frame
 int m_width, m_height;
 
@@ -151,6 +152,7 @@ void Application::Init()
 #endif
 
 	SceneHandler::GetInstance()->AddScene<SceneGame>();
+	SceneHandler::GetInstance()->AddScene<SceneMainMenu>();
 }
 
 void Application::Run()
@@ -161,7 +163,8 @@ void Application::Run()
 
 	try
 	{
-		SceneHandler::GetInstance()->StartUpScene<SceneGame>();
+		//SceneHandler::GetInstance()->StartUpScene<SceneGame>();
+		SceneHandler::GetInstance()->StartUpScene<SceneMainMenu>();
 	}
 	catch (SceneNotRegistered e)
 	{

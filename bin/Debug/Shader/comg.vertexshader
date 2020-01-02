@@ -18,7 +18,8 @@ uniform mat4 MV;
 uniform mat4 MV_inverse_transpose;
 uniform bool lightEnabled;
 
-void main(){
+void main()
+{
 	// Output position of the vertex, in clip space : MVP * position
 	gl_Position =  MVP * vec4(vertexPosition_modelspace, 1);
 	
